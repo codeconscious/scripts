@@ -68,7 +68,7 @@ let calc (pairs:(string * string) array) =
 
     pairs
     |> Array.map createEntry
-    |> Array.map (fun x -> x |> createMilestone milestoneInterval)
+    |> Array.map (createMilestone milestoneInterval)
 
 let pairs =
     result {
@@ -85,13 +85,30 @@ let pairs =
         return entriesWithMilestones
     }
 
-let printData entryWithMilestone =
-    let milestoneText milestone =
-        sprintf $"{milestone.DaysOf} in {milestone.DaysUntil} days on {milestone.Date}"
-    printfn $"{entryWithMilestone.Entry.Date.ToString()}: {entryWithMilestone.Entry.Description} | {entryWithMilestone.Entry.DayNumber} | {milestoneText entryWithMilestone.Milestone}"
+let printCollection (data:EntryWithMilestone array) =
+    let padding = 2
+    let descColWidth = data |> Array.map (fun d -> d.Entry.Description.Length) |> Array.max |> (+) padding
+    let dateColWidth = data |> Array.map (fun d -> d.Entry.Date.ToString().Length) |> Array.max |> (+) padding
+    let dayNoColWidth = data |> Array.map (fun d -> d.Entry.DayNumber.ToString().Length) |> Array.max |> (+) padding
+    let columnsWidths = {| First = descColWidth; Second = dateColWidth; Third = dayNoColWidth |}
+
+    let printSingle columnWidths entryWithMilestone =
+        let milestoneText milestone =
+            sprintf $"{milestone.DaysOf} in {milestone.DaysUntil} days on {milestone.Date}"
+
+        printfn "%-*s: %-*s | %*s | %s"
+            columnsWidths.First
+            entryWithMilestone.Entry.Description
+            columnsWidths.Second
+            (entryWithMilestone.Entry.Date.ToString())
+            columnsWidths.Third
+            (entryWithMilestone.Entry.DayNumber.ToString())
+            (milestoneText entryWithMilestone.Milestone)
+
+    data
+    |> Array.iter (fun d -> d |> printSingle columnsWidths)
 
 
 match pairs with
-| Ok p ->
-    Array.iter printData p
+| Ok p -> p |> printCollection
 | Error e -> printfn $"ERROR: {e}"
