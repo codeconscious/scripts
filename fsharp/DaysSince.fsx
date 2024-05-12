@@ -24,17 +24,6 @@
 open System
 open System.IO
 
-type ResultBuilder() =
-    member this.Bind(m, f) =
-        match m with
-        | Error e -> Error e
-        | Ok a -> f a
-
-    member this.Return(x) =
-        Ok x
-
-let result = new ResultBuilder()
-
 type Event =
     { Category : string
       Name : string
@@ -46,7 +35,7 @@ type Milestone =
       DaysUntil : int
       DayNumber : int }
 
-type Entry = // TODO: Think of a better name, if possible.
+type Entry =
     { Event : Event
       Milestone : Milestone }
 
@@ -65,20 +54,20 @@ let entryGroups =
             | :? FileNotFoundException -> Error $"\"{fileName}\" was not found."
             | e -> Error $"File access failed: {e.Message}"
 
-    let splitLines (text:string) =
+    let splitIntoLines (text:string) =
         let options = StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries
         text.Split(Environment.NewLine, options)
 
-    let splitByComma (text:string[]) =
-        text
-        |> Array.map (fun t -> t.Split(',', StringSplitOptions.TrimEntries))
+    let splitLinesBy (lines:string[]) (separator:char) =
+        lines
+        |> Array.map (fun t -> t.Split(separator, StringSplitOptions.TrimEntries))
 
-    let splitTriplets (text:(string array) array) =
-        text
+    let convertToTriplets (lines:(string array) array) =
+        lines
         |> Array.filter (fun g -> g.Length = 3)
         |> Array.map (fun g -> (g[0], g[1], g[2]))
 
-    let createEntries (groups:(string * string * string) array) =
+    let entriesFromTriplets (groups:(string * string * string) array) =
         let milestoneInterval = 1000
         let today = DateTime.Now |> DateOnly.FromDateTime
 
@@ -109,33 +98,31 @@ let entryGroups =
         |> Array.map createEvent
         |> Array.map (createMilestone milestoneInterval)
 
-    result { // TODO: Decide whether to remove this computation expression.
-        let! text = readFile fileName
-        let lines = text |> splitLines
-        let uncommentedLines =
-            lines
-            |> Array.filter (fun l -> not <| l.StartsWith('#'))
-        let groups = uncommentedLines |> splitByComma
-        let validCountGroups: (string * string * string) array = groups |> splitTriplets
-        let validDateGroups = // TODO: Avoid double-parsing dates.
-            validCountGroups
-            |> Array.filter (fun x ->
-                let _, _, dateText = x
-                let isValid, _ = dateText |> DateOnly.TryParse
-                isValid)
-        let sortedEntries =
-            validDateGroups
-            |> createEntries
-            |> Array.groupBy (fun g -> g.Event.Category)
-            |> Array.map
-                (fun (k, e) ->
-                    k, e |> Array.sortBy (fun e -> e.Event.Date))
-        return sortedEntries
-    }
+    let withValidDates (triplet:(string * string * string)) =
+        let _, _, dateText = triplet
+        let isValid, _ = dateText |> DateOnly.TryParse
+        isValid
+
+    let sortGroupData (groups:(string * Entry array)) =
+         groups |>
+         (fun (k, e) ->
+                k, e |> Array.sortBy (fun e -> e.Event.Date))
+
+    match readFile fileName with
+    | Error e -> Error e
+    | Ok text ->
+        Ok (text
+            |> splitIntoLines
+            |> splitLinesBy <| ','
+            |> convertToTriplets
+            |> Array.filter withValidDates
+            |> entriesFromTriplets
+            |> Array.groupBy (fun e -> e.Event.Category)
+            |> Array.map sortGroupData)
 
 type columnWidths = { First: int; Second: int; Third: int }
 
-let printGroup (group:(string * Entry array)) =
+let printGroupAligned (group:(string * Entry array)) =
     let category, entries = group
     let padding = 1
 
@@ -153,8 +140,8 @@ let printGroup (group:(string * Entry array)) =
           Second = date
           Third = dayNo }
 
-    let thousands (x:int) =
-        System.String.Format("{0:#,##0}", x)
+    let thousands (i:int) =
+        System.String.Format("{0:#,##0}", i)
 
     let printEntry columnWidths entry =
         let dateFormat = "yyyy-MM-dd"
@@ -176,8 +163,8 @@ let printGroup (group:(string * Entry array)) =
 
     printfn $"\n{category.ToUpperInvariant()}"
     printfn "%s" (new String('-', category.Length))
-    entries |> Array.iter (fun d -> d |> printEntry columnWidths)
+    entries |> Array.iter (fun e -> e |> printEntry columnWidths)
 
 match entryGroups with
-| Ok g -> g |> Array.iter printGroup
+| Ok g -> g |> Array.iter printGroupAligned
 | Error e -> printfn $"ERROR: {e}"
