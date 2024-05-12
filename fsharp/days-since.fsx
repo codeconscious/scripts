@@ -22,7 +22,8 @@ type ResultBuilder() =
 let result = new ResultBuilder()
 
 type Entry =
-    { Description : string
+    { Category : string
+      Description : string
       Date : DateOnly
       DayNumber : int }
 
@@ -47,16 +48,17 @@ let splitLines (text:string) =
 let splitToPairs (text:string[]) =
     text
     |> Array.map (fun t -> t.Split(',', StringSplitOptions.TrimEntries))
-    |> Array.map (fun p -> (p[0], p[1]))
+    |> Array.map (fun p -> (p[0], p[1], p[2]))
 
-let calc (pairs:(string * string) array) =
+let calc (pairs:(string * string * string) array) =
     let milestoneInterval = 1000
     let today = DateOnly.FromDateTime(DateTime.Now)
 
-    let createEntry (pair:(string * string)) =
-        let parsedDate = DateOnly.Parse(snd pair)
+    let createEntry (pair:(string * string * string)) =
+        let category, desc, dateText = pair
+        let parsedDate = dateText |> DateOnly.Parse
         let dayNumber = today.DayNumber - parsedDate.DayNumber + 1
-        { Description = fst pair; Date = parsedDate; DayNumber = dayNumber }
+        { Category = category; Description = desc; Date = parsedDate; DayNumber = dayNumber }
 
     let createMilestone interval (entry:Entry) =
         let daysSince = entry.DayNumber
@@ -76,12 +78,13 @@ let pairs =
         let lines = text |> splitLines
         let pairs = lines |> splitToPairs
         let withValidDates = pairs |> Array.filter (fun x ->
-            let isValid, _ = DateOnly.TryParse(snd x)
+            let _, _, dateText = x
+            let isValid, _ = dateText |> DateOnly.TryParse
             isValid)
-        printfn $"{withValidDates.Length} withValidDate(s) found"
         let entriesWithMilestones =
-            withValidDates |> calc |> Array.sortBy (fun x -> x.Entry.Date)
-        printfn $"{entriesWithMilestones.Length} entriesWithMilestone(s) found"
+            withValidDates
+            |> calc
+            |> Array.sortBy (fun x -> x.Entry.Date)
         return entriesWithMilestones
     }
 
