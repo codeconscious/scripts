@@ -134,29 +134,19 @@ let entryGroups =
     }
 
 let printGroup (group:(string * Entry array)) =
-    let category, data = group
+    let category, entries = group
     let padding = 1
 
-    // TODO: DRY up the next 3 functions.
-    let nameColWidth =
-        data
-        |> Array.map (fun d -> d.Event.Name.Length)
+    let getColumnWidth (entries:Entry array) (item:Entry -> int) =
+        entries
+        |> Array.map item
         |> Array.max
         |> (+) padding
-    let dateColWidth =
-        data
-        |> Array.map (fun d -> d.Event.Date.ToString().Length)
-        |> Array.max
-        |> (+) padding
-    let dayNoColWidth =
-        data
-        |> Array.map (fun d -> d.Event.DayNumber.ToString().Length)
-        |> Array.max
-        |> (+) padding
+    let entryColumnsWidths = getColumnWidth entries
     let columnsWidths =
-        {| First = nameColWidth
-           Second = dateColWidth
-           Third = dayNoColWidth |}
+        {| First = entryColumnsWidths <| fun e -> e.Event.Name.Length
+           Second = entryColumnsWidths <| fun e -> e.Event.Date.ToString().Length
+           Third = entryColumnsWidths  <| fun e -> e.Event.DayNumber.ToString().Length |}
 
     let thousands (x:int) =
         System.String.Format("{0:#,##0}", x)
@@ -181,7 +171,7 @@ let printGroup (group:(string * Entry array)) =
 
     printfn $"\n{category.ToUpperInvariant()}"
     printfn "%s" (new String('-', category.Length))
-    data |> Array.iter (fun d -> d |> printEntry columnsWidths)
+    entries |> Array.iter (fun d -> d |> printEntry columnsWidths)
 
 match entryGroups with
 | Ok g -> g |> Array.iter printGroup
