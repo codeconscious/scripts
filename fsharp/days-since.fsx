@@ -1,4 +1,6 @@
+open System
 open System.IO
+
 let readFile fileName =
     try
         fileName
@@ -8,7 +10,6 @@ let readFile fileName =
         | :? FileNotFoundException -> Error $"\"{fileName}\" was not found."
         | e -> Error $"Unexpectedly could not read \"{fileName}\": {e.Message}"
 
-open System
 
 type ResultBuilder() =
     member this.Bind(m, f) =
@@ -84,34 +85,48 @@ let pairs =
         let entriesWithMilestones =
             withValidDates
             |> calc
-            |> Array.sortBy (fun x -> x.Entry.Date)
+            // |> Array.sortBy (fun x -> x.Entry.Date)
+            |> Array.groupBy (fun x -> x.Entry.Category)
+            |> Array.map (fun (k, v) -> k, v |> Array.sortBy (fun (x) -> x.Entry.Date))
         return entriesWithMilestones
     }
 
-let printCollection (data:EntryWithMilestone array) =
+let printCollection (group:(string * EntryWithMilestone array)) =
+    let category, data = group
     let padding = 2
+    let dateFormat = "yyyy-MM-dd"
+
     let descColWidth = data |> Array.map (fun d -> d.Entry.Description.Length) |> Array.max |> (+) padding
     let dateColWidth = data |> Array.map (fun d -> d.Entry.Date.ToString().Length) |> Array.max |> (+) padding
     let dayNoColWidth = data |> Array.map (fun d -> d.Entry.DayNumber.ToString().Length) |> Array.max |> (+) padding
     let columnsWidths = {| First = descColWidth; Second = dateColWidth; Third = dayNoColWidth |}
 
+    let thousands (x:int) =
+        System.String.Format("{0:#,000}", x)
+
     let printSingle columnWidths entryWithMilestone =
         let milestoneText milestone =
-            sprintf $"{milestone.DaysOf} in {milestone.DaysUntil} days on {milestone.Date}"
+            sprintf "%s in %s days on %s"
+                (milestone.DaysOf |> thousands)
+                (milestone.DaysUntil |> thousands)
+                (milestone.Date.ToString dateFormat)
 
-        printfn "%-*s: %-*s | %*s | %s"
+        printfn "%-*s | %-*s | %*s | %s"
             columnsWidths.First
             entryWithMilestone.Entry.Description
             columnsWidths.Second
-            (entryWithMilestone.Entry.Date.ToString())
+            (entryWithMilestone.Entry.Date.ToString dateFormat)
             columnsWidths.Third
-            (entryWithMilestone.Entry.DayNumber.ToString())
+            (entryWithMilestone.Entry.DayNumber |> thousands)
             (milestoneText entryWithMilestone.Milestone)
 
+    printfn $"\n{category.ToUpperInvariant()}"
+    printfn "%s" (new String('-', category.Length))
     data
     |> Array.iter (fun d -> d |> printSingle columnsWidths)
 
-
 match pairs with
-| Ok p -> p |> printCollection
+| Ok p ->
+    p
+    |> Array.iter printCollection
 | Error e -> printfn $"ERROR: {e}"
