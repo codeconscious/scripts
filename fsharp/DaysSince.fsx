@@ -1,9 +1,9 @@
 (* DaysSince: An F# Script
 
-   Summary: Reads a single file containing event names and dates and displays
+   Summary: Reads a single CSV file containing event names and dates and displays
             how many days have elapsed since and how many more will elapse
             until the next 1,000-day milestone. Only single-byte text is fully
-            supported.
+            supported. (Double-byte characters will not align correctly.)
 
             Each line of the file must contain 3 comma-separated values:
               1. Event category name (Birthday, Event, etc.)
@@ -16,7 +16,7 @@
 
    Requirements: .NET 8 runtime (Untested on previous versions, though it might work)
 
-   Usage: dotnet fsi <filePath>
+   Usage: dotnet fsi <CsvFilePath>
 
    Note: This was created mainly for learning purposes and might not be very good. ^_^
 *)
@@ -79,7 +79,7 @@ let entryGroups =
               Name = name
               Date = parsedDate; DayNumber = dayNumber }
 
-        let createMilestone interval (event:Event) =
+        let createEntry interval (event:Event) =
             let daysSince = event.DayNumber
             let daysOf = daysSince + interval - (daysSince % interval)
             let daysUntil = daysOf - daysSince
@@ -96,7 +96,7 @@ let entryGroups =
 
         groups
         |> Array.map createEvent
-        |> Array.map (createMilestone milestoneInterval)
+        |> Array.map (createEntry milestoneInterval)
 
     let withValidDates (triplet:(string * string * string)) =
         let today = DateTime.Now.Date |> DateOnly.FromDateTime
