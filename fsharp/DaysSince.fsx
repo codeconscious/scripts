@@ -133,6 +133,8 @@ let entryGroups =
         return sortedEntries
     }
 
+type columnWidths = { First: int; Second: int; Third: int }
+
 let printGroup (group:(string * Entry array)) =
     let category, entries = group
     let padding = 1
@@ -142,11 +144,14 @@ let printGroup (group:(string * Entry array)) =
         |> Array.map item
         |> Array.max
         |> (+) padding
-    let entryColumnsWidths = getColumnWidth entries
-    let columnsWidths =
-        {| First = entryColumnsWidths <| fun e -> e.Event.Name.Length
-           Second = entryColumnsWidths <| fun e -> e.Event.Date.ToString().Length
-           Third = entryColumnsWidths  <| fun e -> e.Event.DayNumber.ToString().Length |}
+    let columnWidths =
+        let entryColumnWidth = getColumnWidth entries
+        let name = entryColumnWidth <| fun e -> e.Event.Name.Length
+        let date = entryColumnWidth <| fun e -> e.Event.Date.ToString().Length
+        let dayNo = entryColumnWidth  <| fun e -> e.Event.DayNumber.ToString().Length
+        { First = name
+          Second = date
+          Third = dayNo }
 
     let thousands (x:int) =
         System.String.Format("{0:#,##0}", x)
@@ -161,17 +166,17 @@ let printGroup (group:(string * Entry array)) =
                 (milestone.Date.ToString dateFormat)
 
         printfn "%-*s | %-*s | %*s | %s"
-            columnsWidths.First
+            columnWidths.First
             entry.Event.Name
-            columnsWidths.Second
+            columnWidths.Second
             (entry.Event.Date.ToString dateFormat)
-            columnsWidths.Third
+            columnWidths.Third
             (entry.Event.DayNumber |> thousands)
             (summarizeMilestone entry.Milestone)
 
     printfn $"\n{category.ToUpperInvariant()}"
     printfn "%s" (new String('-', category.Length))
-    entries |> Array.iter (fun d -> d |> printEntry columnsWidths)
+    entries |> Array.iter (fun d -> d |> printEntry columnWidths)
 
 match entryGroups with
 | Ok g -> g |> Array.iter printGroup
