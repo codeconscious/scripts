@@ -49,29 +49,17 @@ let splitToPairs (text:string[]) =
     |> Array.map (fun t -> t.Split(',', StringSplitOptions.TrimEntries))
     |> Array.map (fun p -> (p[0], p[1]))
 
-// let convertToEntries (pairs:(string * string) array) =
-//     let isDateValid (maybeDate:string) =
-//         match maybeDate |> DateOnly.TryParse with
-//         | (true, d) -> Ok d
-//         | _ -> Error $"Invalid date: \"{maybeDate}\""
-
-//     pairs
-//     |> Array.partition (fun p -> (fst p) |> DateOnly.TryParse)
-
 let calc (pairs:(string * string) array) =
     let milestoneInterval = 1000
     let today = DateOnly.FromDateTime(DateTime.Now)
 
     let createEntry (pair:(string * string)) =
         let parsedDate = DateOnly.Parse(snd pair)
-        let since = today.DayNumber - parsedDate.DayNumber + 1
-        { Description = fst pair; Date = parsedDate; DayNumber = since }
+        let dayNumber = today.DayNumber - parsedDate.DayNumber + 1
+        { Description = fst pair; Date = parsedDate; DayNumber = dayNumber }
 
     let createMilestone interval (entry:Entry) =
-        // DayCount = daysSince + _interval - (daysSince % _interval);
-        // DaysUntil = DayCount - daysSince;
-        // Date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(DaysUntil));
-        let daysSince = today.DayNumber - entry.Date.DayNumber + 1;
+        let daysSince = entry.DayNumber
         let daysOf = daysSince + interval - (daysSince % interval)
         let daysUntil = daysOf - daysSince
         let date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(daysUntil))
@@ -91,15 +79,19 @@ let pairs =
             let isValid, _ = DateOnly.TryParse(snd x)
             isValid)
         printfn $"{withValidDates.Length} withValidDate(s) found"
-        let entriesWithMilestones = withValidDates |> calc
-        // let pairs =
-        //     withValidDates
-        //     |> Array.map (fun p -> {Description = fst p; Date = DateOnly.Parse(snd p)})
-        //     |> Array.sortBy (fun p -> p.Date)
+        let entriesWithMilestones =
+            withValidDates |> calc |> Array.sortBy (fun x -> x.Entry.Date)
         printfn $"{entriesWithMilestones.Length} entriesWithMilestone(s) found"
         return entriesWithMilestones
     }
 
+let printData entryWithMilestone =
+    let milestoneText milestone =
+        sprintf $"{milestone.DaysOf} in {milestone.DaysUntil} days on {milestone.Date}"
+    printfn $"{entryWithMilestone.Entry.Date.ToString()}: {entryWithMilestone.Entry.Description} | {entryWithMilestone.Entry.DayNumber} | {milestoneText entryWithMilestone.Milestone}"
+
+
 match pairs with
-| Ok p -> p |> Array.iter (fun item -> printfn $"{item.Entry.Date.ToString()}: {item.Entry.Description}")
+| Ok p ->
+    Array.iter printData p
 | Error e -> printfn $"ERROR: {e}"
