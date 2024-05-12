@@ -6,9 +6,9 @@
             supported.
 
             Each line of the file must contain 3 comma-separated values:
-            1. Event category name (Birthday, Event, etc.)
-            2. Event name
-            3. Event date in YYYY-MM-DD or MM-DD-YYYY format
+              1. Event category name (Birthday, Event, etc.)
+              2. Event name
+              3. Future event date in YYYY-MM-DD or MM-DD-YYYY format
             Sample line: `Birthday, Shigeru Miyamoto, 1952/11/16`
 
             Parsing support is very simple and nested commas and such are unsupported.
@@ -99,9 +99,13 @@ let entryGroups =
         |> Array.map (createMilestone milestoneInterval)
 
     let withValidDates (triplet:(string * string * string)) =
+        let today = DateTime.Now.Date |> DateOnly.FromDateTime
         let _, _, dateText = triplet
-        let isValid, _ = dateText |> DateOnly.TryParse
-        isValid
+        let isValid, entryDate = dateText |> DateOnly.TryParse
+
+        if not isValid
+        then false
+        else entryDate <= today
 
     let sortGroupData (groups:(string * Entry array)) =
          groups |>
@@ -118,7 +122,8 @@ let entryGroups =
             |> Array.filter withValidDates
             |> entriesFromTriplets
             |> Array.groupBy (fun e -> e.Event.Category)
-            |> Array.map sortGroupData)
+            |> Array.map sortGroupData
+        )
 
 type columnWidths = { First: int; Second: int; Third: int }
 
