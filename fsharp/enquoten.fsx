@@ -11,8 +11,6 @@
           Sample: dotnet fsi 70 "> " file1.txt
 
    Note: This was created mainly for learning purposes and might not be very good. ^_^
-
-   Last significant update: May 4, 2024, to add computation expressions and allow custom prefixes.
 *)
 
 open System

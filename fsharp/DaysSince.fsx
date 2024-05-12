@@ -1,3 +1,25 @@
+(* DaysSince: An F# Script
+
+   Summary: Reads a single file containing event names and dates and displays
+            how many days have elapsed since and how many more will elapse
+            until the next 1,000-day milestone. Only English text is supported.
+
+            Each line of the file must contain 3 comma-separated values:
+            1. Category name (Birthday, Event, etc.)
+            2. Description
+            3. Event date in YYYY-MM-DD format
+
+            Parsing is very simple and nested commas and such are not supported.
+            Invalid lines are ignored.
+
+   Requirements: .NET 8 runtime (Untested on previous versions, though it might work)
+
+   Usage: dotnet fsi <filePath>
+          Sample: dotnet fsi file1.csv
+
+   Note: This was created mainly for learning purposes and might not be very good. ^_^
+*)
+
 open System
 open System.IO
 
