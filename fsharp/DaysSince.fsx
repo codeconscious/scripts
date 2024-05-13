@@ -109,8 +109,8 @@ let entryGroups =
 
     let sortGroupData (groups:(string * Entry array)) =
          groups |>
-         (fun (k, e) ->
-                k, e |> Array.sortBy (fun e -> e.Event.Date))
+         (fun (k, e) -> k, e
+                        |> Array.sortBy (fun e -> e.Event.Date))
 
     match readFile fileName with
     | Error e -> Error e
