@@ -68,35 +68,35 @@ let entryGroups =
         |> Array.map (fun g -> (g[0], g[1], g[2]))
 
     let entriesFromTriplets (groups:(string * string * string) array) =
-        let milestoneInterval = 1000
         let today = DateTime.Now |> DateOnly.FromDateTime
+        let milestoneInterval = 1000
 
-        let createEvent (triplet:(string * string * string)) =
-            let category, name, dateText = triplet
-            let parsedDate = dateText |> DateOnly.Parse
-            let dayNumber = today.DayNumber - parsedDate.DayNumber + 1
-            { Category = category
-              Name = name
-              Date = parsedDate; DayNumber = dayNumber }
+        let createEntry (triplet:(string * string * string)) =
+            let createEvent (triplet:(string * string * string)) =
+                let category, name, dateText = triplet
+                let parsedDate = dateText |> DateOnly.Parse
+                let dayNumber = today.DayNumber - parsedDate.DayNumber + 1
+                { Category = category
+                  Name = name
+                  Date = parsedDate; DayNumber = dayNumber }
 
-        let createEntry interval (event:Event) =
-            let daysSince = event.DayNumber
-            let daysOf = daysSince + interval - (daysSince % interval)
-            let daysUntil = daysOf - daysSince
-            let date =
-                daysUntil
-                |> DateTime.Now.Date.AddDays
-                |> DateOnly.FromDateTime
-            let milestone =
+            let milestone interval (event:Event) =
+                let daysSince = event.DayNumber
+                let daysOf = daysSince + interval - (daysSince % interval)
+                let daysUntil = daysOf - daysSince
+                let date =
+                    daysUntil
+                    |> DateTime.Now.Date.AddDays
+                    |> DateOnly.FromDateTime
                 { Date = date
                   DaysUntil = daysUntil
                   DayNumber = daysOf }
-            { Event = event
-              Milestone = milestone }
 
-        groups
-        |> Array.map createEvent
-        |> Array.map (createEntry milestoneInterval)
+            let event = createEvent triplet
+            { Event = event
+              Milestone = milestone milestoneInterval event }
+
+        groups |> Array.map createEntry
 
     let withValidDates (triplet:(string * string * string)) =
         let today = DateTime.Now.Date |> DateOnly.FromDateTime
