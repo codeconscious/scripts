@@ -8,7 +8,7 @@
             Each line of the file must contain 3 comma-separated values:
               1. Event category name (Birthday, Event, etc.)
               2. Event name
-              3. Future event date in YYYY-MM-DD or MM-DD-YYYY format
+              3. Future event date (in YYYY-MM-DD, MM-DD-YYYY, or other standard format)
             Sample line: `Birthday, Shigeru Miyamoto, 1952/11/16`
 
             Parsing support is very simple and nested commas and such are unsupported.
