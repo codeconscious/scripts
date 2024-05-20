@@ -19,9 +19,14 @@ open System
 open System.IO
 
 type Args<'T> =
-    { Limit: 'T
-      Prefix: string
-      File: string }
+    {
+        /// The maximum length each line of text should be, including the prefix text.
+        Limit: 'T
+        /// A prefix (such as "> ") for each line.
+        Prefix: string
+        /// The name of the comma-separated input file.
+        File: string
+    }
 
 type ResultBuilder() =
     member this.Bind(m, f) =
