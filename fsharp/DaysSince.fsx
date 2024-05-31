@@ -60,7 +60,7 @@ let entryGroups =
 
     let splitLinesBy (lines:string[]) (separator:char) =
         lines
-        |> Array.map (fun t -> t.Split(separator, StringSplitOptions.TrimEntries))
+        |> Array.map _.Split(separator, StringSplitOptions.TrimEntries)
 
     let convertToTriplets (lines:(string array) array) =
         lines
@@ -110,7 +110,7 @@ let entryGroups =
     let sortGroupData (groups:(string * Entry array)) =
          groups |>
          (fun (k, e) -> k, e
-                        |> Array.sortBy (fun e -> e.Event.Date))
+                        |> Array.sortBy _.Event.Date)
 
     match readFile fileName with
     | Error e -> Error e
@@ -121,7 +121,7 @@ let entryGroups =
             |> convertToTriplets
             |> Array.filter withValidDates
             |> entriesFromTriplets
-            |> Array.groupBy (fun e -> e.Event.Category)
+            |> Array.groupBy _.Event.Category
             |> Array.map sortGroupData
         )
 
@@ -138,9 +138,9 @@ let printGroupAligned (group:(string * Entry array)) =
         |> (+) padding
     let columnWidths =
         let entryColumnWidth = getColumnWidth entries
-        let name = entryColumnWidth <| fun e -> e.Event.Name.Length
-        let date = entryColumnWidth <| fun e -> e.Event.Date.ToString().Length
-        let dayNo = entryColumnWidth  <| fun e -> e.Event.DayNumber.ToString().Length
+        let name = entryColumnWidth <| _.Event.Name.Length
+        let date = entryColumnWidth <| _.Event.Date.ToString().Length
+        let dayNo = entryColumnWidth  <| _.Event.DayNumber.ToString().Length
         { First = name
           Second = date
           Third = dayNo }
