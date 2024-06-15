@@ -86,14 +86,14 @@ module ArgValidation =
         }
 
 module Io =
-    let readFile file =
+    let readFile filePath =
         try
-            file
+            filePath
             |> File.ReadAllText
             |> Ok
         with
-            | :? FileNotFoundException -> Error $"\"{file}\" was not found."
-            | e -> Error $"Unexpectedly could not read \"{file}\": {e.Message}"
+            | :? FileNotFoundException -> Error $"\"{filePath}\" was not found."
+            | e -> Error $"Unexpectedly could not read \"{filePath}\": {e.Message}"
 
 module Quoting =
     let processFileText (args:Args<int>) (text:string) =
