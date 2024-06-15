@@ -1,6 +1,6 @@
 (* FilesWithSignificantDates: An F# Script
 
-   Summary: TBD
+   Summary: Passed a directory, lists files with their created and last-modified times.
 
    Requirements: .NET 8 runtime (Untested on previous versions, though it might work)
 
