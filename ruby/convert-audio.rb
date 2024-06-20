@@ -1,3 +1,10 @@
+# Batch audio conversion script
+#
+# Pass it supported source and target extensions, and it will convert all files
+# in the current directory. (I only use this occasionally, so it's unpolished.)
+#
+# https://codeconscious.github.io/2024/01/25/audio-conversion-ruby-script.html
+
 SUPPORTED_EXTS = ['mp3', 'm4a', 'ogg']
 
 source_ext = ARGV[0]
