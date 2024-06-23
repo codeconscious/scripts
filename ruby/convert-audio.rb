@@ -5,25 +5,22 @@
 #
 # https://codeconscious.github.io/2024/01/25/audio-conversion-ruby-script.html
 
+def variables_invalid?(source_ext, target_ext, supported_exts)
+  source_ext.nil? ||
+    target_ext.nil? ||
+    !supported_exts.include?(source_ext) ||
+    !supported_exts.include?(target_ext) ||
+    source_ext == target_ext
+end
+
 SUPPORTED_EXTS = ['mp3', 'm4a', 'ogg']
 
 source_ext = ARGV[0]
 target_ext = ARGV[1]
 
-def variables_invalid?(source_ext, target_ext, supported_exts)
-  source_ext.nil? ||
-    target_ext.nil? ||
-    !supported_exts.include?(source_ext) ||
-    !supported_exts.include?(target_ext)
-end
-
 if variables_invalid?(source_ext, target_ext, SUPPORTED_EXTS)
-  puts 'Pass both (1) a source extension and (2) a target extension.'
-  puts "Supported format: #{SUPPORTED_EXTS.join(', ')}."
-  return
-elsif source_ext == target_ext
-  puts 'You cannot convert to the source format. Enter two different formats.'
-  puts "Supported format: #{SUPPORTED_EXTS.join(', ')}."
+  puts 'Pass both (1) a source extension and (2) a target extension. They cannot be identical.'
+  puts "Supported formats: #{SUPPORTED_EXTS.join(', ')}."
   return
 end
 
