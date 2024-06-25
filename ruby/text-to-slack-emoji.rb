@@ -147,10 +147,12 @@ unless supported_styles.include? style
   return
 end
 
-is_supported_char = -> (char) { SUPPORTED_CHARS[style][:chars].include? char }
+is_supported_char = ->(c) { SUPPORTED_CHARS[style][:chars].include? c }
+
 unless lowered_chars.all?(&is_supported_char)
   STDERR.puts "Invalid characters found! Only the following characters are supported for the \"#{style}\" style:"
-  STDERR.puts SUPPORTED_CHARS[style][:chars].map { |char| char == ' ' ? '(space)' : char }.join(' ')
+  style_chars = SUPPORTED_CHARS[style][:chars].map { |c| c == SPACE ? '(space)' : c }
+  STDERR.puts style_chars.join(SPACE)
   return
 end
 
