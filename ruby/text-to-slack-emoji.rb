@@ -169,25 +169,29 @@ supported_styles = SUPPORTED_CHARS.keys
 
 if ARGV.count.zero? || ARGV.count > 2
   STDERR.puts "Pass in (1) a style name and (2) a string containing only supported characters for that style."
-  STDERR.puts "Supported styles:  #{supported_styles.join('  ')}"
+  STDERR.puts "Supported styles: #{supported_styles.join(', ')}"
   return
 end
 
 style = ARGV[0].downcase.to_sym
 
 is_supported_style = supported_styles.include? style
-display_style_chars = ->(style) { SUPPORTED_CHARS[style][:chars].map { |c| c == SPACE ? '(space)' : c } }
+
+style_chars = lambda do |style, separator|
+  SUPPORTED_CHARS[style][:chars]
+    .map { |c| c == SPACE ? '(space)' : c }
+    .join(separator)
+end
 
 if ARGV.count == 1 && is_supported_style
   STDERR.puts "The \"#{style}\" style supports the following characters:"
-  style_chars = display_style_chars.call(style)
-  STDERR.puts style_chars.join(SPACE)
+  STDERR.puts style_chars.call(style, SPACE)
   return
 end
 
 unless is_supported_style
   STDERR.puts "\"#{style}\" is not a supported style."
-  STDERR.puts "Supported styles:  #{supported_styles.join('  ')}"
+  STDERR.puts "Supported styles: #{supported_styles.join(', ')}"
   return
 end
 
@@ -196,9 +200,8 @@ lowered_chars = ARGV[1].downcase.chars
 is_supported_char = ->(c) { SUPPORTED_CHARS[style][:chars].include? c }
 
 unless lowered_chars.all?(&is_supported_char)
-  STDERR.puts "Invalid characters found! Only the following characters are supported for the \"#{style}\" style:"
-  style_chars = display_style_chars.call(style)
-  STDERR.puts style_chars.join(SPACE)
+  STDERR.puts "Only the following characters are supported for the \"#{style}\" style:"
+  STDERR.puts style_chars.call(style, SPACE)
   return
 end
 
