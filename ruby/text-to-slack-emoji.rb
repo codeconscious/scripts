@@ -175,17 +175,17 @@ end
 
 style = ARGV[0].downcase.to_sym
 
-is_supported_style = supported_styles.include? style
-
-style_chars = lambda do |style, separator|
+def style_chars(style, separator)
   SUPPORTED_CHARS[style][:chars]
     .map { |c| c == SPACE ? '(space)' : c }
     .join(separator)
 end
 
+is_supported_style = supported_styles.include? style
+
 if ARGV.count == 1 && is_supported_style
   STDERR.puts "The \"#{style}\" style supports the following characters:"
-  STDERR.puts style_chars.call(style, SPACE)
+  STDERR.puts style_chars(style, SPACE)
   return
 end
 
@@ -201,7 +201,7 @@ is_supported_char = ->(c) { SUPPORTED_CHARS[style][:chars].include? c }
 
 unless lowered_chars.all?(&is_supported_char)
   STDERR.puts "Only the following characters are supported for the \"#{style}\" style:"
-  STDERR.puts style_chars.call(style, SPACE)
+  STDERR.puts style_chars(style, SPACE)
   return
 end
 
