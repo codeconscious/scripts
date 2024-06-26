@@ -99,6 +99,41 @@ SUPPORTED_CHARS = {
         end
       end
     },
+  merah:
+    {
+      chars: [*LETTERS, SPACE],
+      converter: ->(char) do
+        case char
+        when SPACE then ':blank:'
+        # The "merah" set is incomplete and inconsistently named.
+        when 'b' then ':merahbb:'
+        when 'd' then ':merahdd:'
+        when 'e' then ':merahee:'
+        when 'f' then ':ff:'
+        when 'h' then ':merahhh:'
+        when 'k' then ':merahkk:'
+        when 'l' then ':merahll:'
+        when 'q' then ':alpha-q:'
+        when 'r' then ':merahrr:'
+        when 's' then ':merahsss:'
+        when 'u' then ':merahuuu:'
+        when 'x' then ':alpha-x:'
+        when 'y' then ':merahhyyy:'
+        when 'z' then ':alpha-z:'
+        else ":merah#{char}:"
+        end
+      end
+    },
+  magazine:
+    {
+      chars: [*LETTERS, SPACE],
+      converter: ->(char) do
+        case char
+        when SPACE then ':blank:'
+        else ":magazine_#{char}:"
+        end
+      end
+    },
   numbers:
     {
       chars: [*NUMBERS, SPACE],
