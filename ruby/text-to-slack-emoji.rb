@@ -1,7 +1,7 @@
 # When passed (1) a style name and (2) a string of supported characters, this script
 # converts the string to Slack emoji symbols of the requested style. Case is ignored.
 # The requested character emojis must, of course, be available in Slack.
-# Update SUPPORTED_CHARS as needed to match the emojis available in Slack.
+# Update SUPPORTED_CHARSETS as needed to match the emojis available in Slack.
 #
 # Run: ruby slack-text-converter.rb STYLE_NAME "STRING_OF_SUPPORTED_CHARS"
 #        (Example: ruby slack-text-converter.rb cookie "Sprint planning")
@@ -12,7 +12,7 @@ LETTERS = *('a'..'z')
 NUMBERS = *('0'..'9')
 SPACE = ' '
 
-SUPPORTED_CHARS = {
+SUPPORTED_CHARSETS = {
   cookie:
     {
       chars: [*LETTERS, '!', '?', '&', '•', SPACE],
@@ -165,7 +165,7 @@ SUPPORTED_CHARS = {
     }
   }
 
-supported_styles = SUPPORTED_CHARS.keys
+supported_styles = SUPPORTED_CHARSETS.keys
 
 if ARGV.count.zero? || ARGV.count > 2
   STDERR.puts "Pass in (1) a style name and (2) a string containing only supported characters for that style."
@@ -176,7 +176,7 @@ end
 style = ARGV[0].downcase.to_sym
 
 def style_chars(style, separator)
-  SUPPORTED_CHARS[style][:chars]
+  SUPPORTED_CHARSETS[style][:chars]
     .map { |c| c == SPACE ? '(space)' : c }
     .join(separator)
 end
@@ -197,7 +197,7 @@ end
 
 lowered_chars = ARGV[1].downcase.chars
 
-is_supported_char = ->(c) { SUPPORTED_CHARS[style][:chars].include? c }
+is_supported_char = ->(c) { SUPPORTED_CHARSETS[style][:chars].include? c }
 
 unless lowered_chars.all?(&is_supported_char)
   STDERR.puts "Only the following characters are supported for the \"#{style}\" style:"
@@ -205,5 +205,5 @@ unless lowered_chars.all?(&is_supported_char)
   return
 end
 
-style_converter = SUPPORTED_CHARS[style][:converter]
+style_converter = SUPPORTED_CHARSETS[style][:converter]
 puts lowered_chars.map(&style_converter).join
