@@ -134,6 +134,54 @@ SUPPORTED_CHARSETS = {
         end
       end
     },
+  custom:
+    {
+      chars: [*LETTERS, *NUMBERS, '?', '!', SPACE],
+      converter: ->(char) do
+        case char
+        when SPACE then ':blank:'
+        when 'a' then ":m-a:"
+        when 'b' then ":b4:"
+        when 'c' then ":c2:"
+        when 'd' then ":devo-d:"
+        when 'e' then ":edge:"
+        when 'f' then ":ff:"
+        when 'g' then ":g-neon:"
+        when 'h' then ":h:"
+        when 'i' then ":info:"
+        when 'j' then ":super-j:"
+        when 'k' then ":m'kay:"
+        when 'l' then ":labsslide-1:"
+        when 'm' then ":m:"
+        when 'n' then ":n64:"
+        when 'o' then ":o:"
+        when 'p' then ":p2:"
+        when 'q' then ":qflash:"
+        when 'r' then ":r:"
+        when 's' then ":scon:"
+        when 't' then ":kid-t:"
+        when 'u' then ":m-u:"
+        when 'v' then ":devo-v:"
+        when 'w' then ":walphabet:"
+        when 'x' then ":x:"
+        when 'y' then ":y1:"
+        when 'z' then ":zzz:"
+        when '0' then ":0_bats:"
+        when '1' then ":number-1-red:"
+        when '2' then ":number2:"
+        when '3' then ":number-3-flip:"
+        when '4' then ":mana-4:"
+        when '5' then ":round-red-5:"
+        when '6' then ":mana-6:"
+        when '7' then ":7-up:"
+        when '8' then ":8flower:"
+        when '9' then ":9lego:"
+        when '!' then ":exclamation:"
+        when '?' then ":question-icon:"
+        else char # Should not be reached.
+        end
+      end
+    },
   numbers:
     {
       chars: [*NUMBERS, SPACE],
