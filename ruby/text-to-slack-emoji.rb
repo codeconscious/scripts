@@ -165,7 +165,7 @@ SUPPORTED_CHARSETS = {
         when 'w' then ":walphabet:"
         when 'x' then ":x:"
         when 'y' then ":y1:"
-        when 'z' then ":zzz:"
+        when 'z' then ":zelle_onfire:"
         when '0' then ":0_bats:"
         when '1' then ":number-1-red:"
         when '2' then ":number2:"
