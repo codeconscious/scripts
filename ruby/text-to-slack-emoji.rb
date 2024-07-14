@@ -245,6 +245,11 @@ end
 
 lowered_chars = ARGV[1].downcase.chars
 
+if lowered_chars.length.zero?
+  STDERR.puts "You must enter text for conversion."
+  return
+end
+
 is_supported_char = ->(c) { SUPPORTED_CHARSETS[style][:chars].include? c }
 
 unless lowered_chars.all?(&is_supported_char)
