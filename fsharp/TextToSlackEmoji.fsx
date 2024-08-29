@@ -30,7 +30,7 @@ module Styles =
                         match ch with
                         | Space -> ":blank: "
                         | 'o' -> ":alpha-0: "
-                        | _ -> $":alpha-{ch}: "
+                        | _ -> $":alpha-{ch}: " // Hairspace
             };
             {   Name = "alphawhite"
                 SupportedChars = letters @ [Space; '!'; '?'; '#'; '@']
