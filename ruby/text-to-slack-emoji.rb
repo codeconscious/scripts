@@ -34,7 +34,7 @@ SUPPORTED_CHARSETS = {
         case char
         when SPACE then ':blank: '
         when 'o' then ':alpha-0: '
-        else ":alpha-#{char}: "
+        else ":alpha-#{char}: " # Hair space
         end
       end
     },
