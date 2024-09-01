@@ -1,3 +1,5 @@
+# TODO: Add exception handling
+
 require 'securerandom'
 require 'fileutils'
 
@@ -28,7 +30,7 @@ def rename_file(dir, full_path, new_base_name)
   ext = File.extname(full_path) # Includes the period.
 
   unless is_valid_extension?(ext)
-    puts "[I] Ignoring #{full_path}"
+    puts "[!] Ignoring #{full_path}"
     return
   end
 
@@ -50,6 +52,7 @@ end
 
 directory = ARGV[0]
 
+# Check if the directory exists
 unless Dir.exist?(directory)
   puts "Error: Directory '#{directory}' does not exist."
   exit 1
