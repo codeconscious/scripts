@@ -43,7 +43,7 @@ def is_valid_extension?(path)
 end
 
 if ARGV.length != 1
-  puts "Usage: ruby rename_with_uuid.rb <directory_path>"
+  puts "Usage: ruby recursive_random_rename.rb DIRECTORY_PATH"
   exit 1
 end
 
