@@ -39,7 +39,7 @@ def rename_file(dir, full_path, new_base_name)
 end
 
 def is_valid_extension?(path)
-  %w[.mp3 .m4a .mp4 .aac .ogg .opus .flac .wav].include? path.downcase
+  %w[.mp3 .m4a .mp4 .aac .ogg .opus .flac].include? path.downcase
 end
 
 if ARGV.length != 1
