@@ -1,5 +1,3 @@
-# TODO: Add exception handling
-
 require 'securerandom'
 require 'fileutils'
 
@@ -30,13 +28,12 @@ def rename_file(dir, full_path, new_base_name)
   ext = File.extname(full_path) # Includes the period.
 
   unless is_valid_extension?(ext)
-    puts "[!] Ignoring #{full_path}"
+    puts "[I] Ignoring #{full_path}"
     return
   end
 
   new_file_name = "#{new_base_name}#{ext}"
   new_file_path = File.join(dir, new_file_name)
-
   FileUtils.mv(full_path, new_file_path)
   puts "[F] Renamed file '#{full_path}' to '#{new_file_path}'"
 end
