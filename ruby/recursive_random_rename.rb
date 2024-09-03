@@ -2,6 +2,8 @@ require 'securerandom'
 require 'fileutils'
 
 def rename_recursively(dir, whitelisted_extensions)
+  results = { dirs: 0, files: { success: 0, ignored: 0 } }
+
   Dir.foreach(dir) do |dir_or_file|
     next if dir_or_file == '.' || dir_or_file == '..' # Skip current and parent directory entries
 
@@ -10,10 +12,17 @@ def rename_recursively(dir, whitelisted_extensions)
 
     if File.directory?(full_path)
       rename_directory(dir, full_path, new_name)
+      results[:dirs] = results[:dirs] + 1
     else
-      rename_file(dir, full_path, new_name, whitelisted_extensions)
+      file_result = rename_file(dir, full_path, new_name, whitelisted_extensions)
+      results[:files][file_result] = results[:files][file_result] + 1
     end
   end
+
+  # Print results
+  dir_label = -> (count) { count == 1 ? "#{count} directory" : "#{count} directories" }
+  files_label = -> (count) { count == 1 ? "#{count} file" : "#{count} files" }
+  puts "Renamed #{dir_label.call(results[:dirs])} and #{files_label.call(results[:files][:success])}. Ignored #{files_label.call(results[:files][:ignored])}."
 end
 
 def rename_directory(dir, full_path, new_name)
@@ -29,13 +38,14 @@ def rename_file(dir, full_path, new_base_name, whitelisted_extensions)
 
   if whitelisted_extensions.any? && !whitelisted_extensions.include?(ext)
     puts "Ignoring #{full_path}"
-    return
+    return :ignored
   end
 
   new_file_name = "#{new_base_name}#{ext}"
   new_file_path = File.join(dir, new_file_name)
   FileUtils.mv(full_path, new_file_path)
   puts "Renamed file '#{full_path}' to '#{new_file_path}'"
+  return :success
 end
 
 unless ARGV.length.between?(1, 2)
