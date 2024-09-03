@@ -39,10 +39,10 @@ def rename_file(dir, full_path, new_base_name, whitelisted_extensions)
 end
 
 unless ARGV.length.between?(1, 2)
-  puts "Usage: ruby recursive_random_rename.rb DIRECTORY_PATH"
+  puts "Usage: ruby recursive_random_rename.rb <DIRECTORY_PATH>"
   puts "          • Updates all files"
   puts
-  puts "       ruby recursive_random_rename.rb DIRECTORY_PATH EXT1,EXT2,EXT3"
+  puts "       ruby recursive_random_rename.rb <DIRECTORY_PATH> <EXT1,EXT2,EXT3>"
   puts "          • Renames only files with the specific extensions"
   puts "          • The initial period is optional (i.e., '.m4a' == 'm4a')"
   puts "          • Sample: ruby recursive_random_rename.rb . m4a,mp3,ogg"
