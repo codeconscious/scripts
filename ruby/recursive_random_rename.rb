@@ -1,7 +1,7 @@
 require 'securerandom'
 require 'fileutils'
 
-def rename_recursively(dir)
+def rename_recursively(dir, whitelisted_extensions)
   Dir.foreach(dir) do |dir_or_file|
     next if dir_or_file == '.' || dir_or_file == '..' # Skip current and parent directory entries
 
@@ -11,7 +11,7 @@ def rename_recursively(dir)
     if File.directory?(full_path)
       rename_directory(dir, full_path, new_name)
     else
-      rename_file(dir, full_path, new_name)
+      rename_file(dir, full_path, new_name, whitelisted_extensions)
     end
   end
 end
@@ -24,10 +24,10 @@ def rename_directory(dir, full_path, new_name)
   rename_recursively(new_dir_path)
 end
 
-def rename_file(dir, full_path, new_base_name)
+def rename_file(dir, full_path, new_base_name, whitelisted_extensions)
   ext = File.extname(full_path) # Includes the period.
 
-  unless is_valid_extension?(ext)
+  if whitelisted_extensions.any? && !whitelisted_extensions.include?(ext)
     puts "Ignoring #{full_path}"
     return
   end
@@ -38,16 +38,19 @@ def rename_file(dir, full_path, new_base_name)
   puts "Renamed file '#{full_path}' to '#{new_file_path}'"
 end
 
-def is_valid_extension?(path)
-  %w[.mp3 .m4a .mp4 .aac .ogg .opus .flac].include? path.downcase
-end
-
-if ARGV.length != 1
+unless ARGV.length.between?(1, 2)
   puts "Usage: ruby recursive_random_rename.rb DIRECTORY_PATH"
+  puts "          • Updates all files"
+  puts
+  puts "       ruby recursive_random_rename.rb DIRECTORY_PATH EXT1,EXT2,EXT3"
+  puts "          • Renames only files with the specific extensions"
+  puts "          • The initial period is optional (i.e., '.m4a' == 'm4a')"
+  puts "          • Sample: ruby recursive_random_rename.rb . m4a,mp3,ogg"
   exit 1
 end
 
 directory = ARGV[0]
+whitelisted_extensions = ARGV.length == 2 ? ARGV[1].split(",").map(&:strip).map { |i| i[0] == '.' ? i : ".#{i}" } : []
 
 # Check if the directory exists
 unless Dir.exist?(directory)
@@ -55,4 +58,4 @@ unless Dir.exist?(directory)
   exit 1
 end
 
-rename_recursively(directory)
+rename_recursively(directory, whitelisted_extensions)
