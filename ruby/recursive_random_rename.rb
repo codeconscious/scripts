@@ -2,10 +2,10 @@ require 'securerandom'
 require 'fileutils'
 
 def rename_recursively(dir)
-  Dir.foreach(dir) do |item_name|
-    next if item_name == '.' || item_name == '..' # Skip current and parent directory entries
+  Dir.foreach(dir) do |dir_or_file|
+    next if dir_or_file == '.' || dir_or_file == '..' # Skip current and parent directory entries
 
-    full_path = File.join(dir, item_name)
+    full_path = File.join(dir, dir_or_file)
     new_name = SecureRandom.uuid
 
     if File.directory?(full_path)
@@ -19,7 +19,7 @@ end
 def rename_directory(dir, full_path, new_name)
   new_dir_path = File.join(dir, new_name)
   FileUtils.mv(full_path, new_dir_path)
-  puts "[D] Renamed directory '#{full_path}' to '#{new_dir_path}'"
+  puts "Renamed directory '#{full_path}' to '#{new_dir_path}'"
 
   rename_recursively(new_dir_path)
 end
@@ -28,14 +28,14 @@ def rename_file(dir, full_path, new_base_name)
   ext = File.extname(full_path) # Includes the period.
 
   unless is_valid_extension?(ext)
-    puts "[I] Ignoring #{full_path}"
+    puts "Ignoring #{full_path}"
     return
   end
 
   new_file_name = "#{new_base_name}#{ext}"
   new_file_path = File.join(dir, new_file_name)
   FileUtils.mv(full_path, new_file_path)
-  puts "[F] Renamed file '#{full_path}' to '#{new_file_path}'"
+  puts "Renamed file '#{full_path}' to '#{new_file_path}'"
 end
 
 def is_valid_extension?(path)
