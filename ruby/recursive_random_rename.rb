@@ -59,7 +59,7 @@ unless ARGV.length.between?(1, 2)
   puts "Usage: ruby recursive_random_rename.rb <DIRECTORY_PATH>"
   puts "          • Updates all files"
   puts
-  puts "       ruby recursive_random_rename.rb <DIRECTORY_PATH> <EXT1,EXT2,EXT3>"
+  puts "       ruby recursive_random_rename.rb <DIRECTORY_PATH> <EXT1,EXT2,EXT3,...>"
   puts "          • Renames only files with the specific extensions"
   puts "          • The initial period is optional (i.e., '.m4a' == 'm4a')"
   puts "          • Sample: ruby recursive_random_rename.rb . m4a,mp3,ogg"
@@ -67,12 +67,19 @@ unless ARGV.length.between?(1, 2)
 end
 
 directory = ARGV[0]
-whitelisted_extensions = ARGV.length == 2 ? ARGV[1].split(",").map(&:strip).map { |i| i[0] == '.' ? i : ".#{i}" } : []
 
-# Check if the directory exists
 unless Dir.exist?(directory)
   puts "Error: Directory '#{directory}' does not exist."
   exit 1
 end
+
+whitelisted_extensions =
+  if ARGV.length == 2
+    ARGV[1].split(",")
+           .map(&:strip)
+           .map { |ext| ext[0] == '.' ? ext : ".#{ext}" }
+  else
+    []
+  end
 
 rename_recursively(directory, whitelisted_extensions)
