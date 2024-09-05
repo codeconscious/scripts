@@ -19,10 +19,7 @@ def rename_recursively(dir, whitelisted_extensions)
     end
   end
 
-  # Print results
-  dir_label = -> (count) { count == 1 ? "#{count} directory" : "#{count} directories" }
-  files_label = -> (count) { count == 1 ? "#{count} file" : "#{count} files" }
-  puts "Renamed #{dir_label.call(results[:dirs])} and #{files_label.call(results[:files][:success])}. Ignored #{files_label.call(results[:files][:ignored])}."
+  print_results(results)
 end
 
 def rename_directory(dir, full_path, new_name)
@@ -46,6 +43,16 @@ def rename_file(dir, full_path, new_base_name, whitelisted_extensions)
   FileUtils.mv(full_path, new_file_path)
   puts "Renamed file '#{full_path}' to '#{new_file_path}'"
   return :success
+end
+
+def print_results(results)
+  dir_label = results[:dirs] == 1 ? "1 directory" : "#{results[:dirs]} directories"
+
+  file_label_maker = -> (count) { count == 1 ? "1 file" : "#{count} files" }
+  file_success_label = file_label_maker.call(results[:files][:success])
+  file_ignore_label = file_label_maker.call(results[:files][:ignored])
+
+  puts "Renamed #{dir_label} and #{file_success_label}. Ignored #{file_ignore_label}."
 end
 
 unless ARGV.length.between?(1, 2)
