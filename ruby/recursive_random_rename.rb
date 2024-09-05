@@ -12,10 +12,10 @@ def rename_recursively(dir, whitelisted_extensions)
 
     if File.directory?(full_path)
       rename_directory(dir, full_path, new_name)
-      results[:dirs] = results[:dirs] + 1
+      results[:dirs] += 1
     else
-      file_result = rename_file(dir, full_path, new_name, whitelisted_extensions)
-      results[:files][file_result] = results[:files][file_result] + 1
+      rename_result_type = rename_file(dir, full_path, new_name, whitelisted_extensions)
+      results[:files][rename_result_type] += 1
     end
   end
 
