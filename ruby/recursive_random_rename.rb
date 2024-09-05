@@ -19,7 +19,7 @@ def rename_recursively(dir, whitelisted_extensions)
     end
   end
 
-  print_results(results)
+  results
 end
 
 def rename_directory(dir, full_path, new_name)
@@ -82,4 +82,5 @@ whitelisted_extensions =
     []
   end
 
-rename_recursively(directory, whitelisted_extensions)
+results = rename_recursively(directory, whitelisted_extensions)
+print_results(results)
