@@ -19,19 +19,24 @@ let rec getAllFiles dir pattern : seq<DirectoryItem> =
             yield! getAllFiles d pattern
     }
 
-let renameFile oldName newName =
-    try
-        Ok <| File.Move(oldName, newName)
-    with
-        | :? FileNotFoundException -> Error $"File \"{oldName}\" was not found."
-        | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
+let rename path newName =
+    let renameFile oldName newName =
+        try
+            Ok <| File.Move(oldName, newName)
+        with
+            | :? FileNotFoundException -> Error $"File \"{oldName}\" was not found."
+            | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
 
-let renameDir oldName newName =
-    try
-        Ok <| Directory.Move(oldName, newName)
-    with
-        | :? FileNotFoundException -> Error $"Directory \"{oldName}\" was not found."
-        | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
+    let renameDir oldName newName =
+        try
+            Ok <| Directory.Move(oldName, newName)
+        with
+            | :? FileNotFoundException -> Error $"Directory \"{oldName}\" was not found."
+            | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
+
+    match path with
+    | FileName f -> renameFile f newName
+    | DirectoryName d -> renameDir d newName
 
 let summarize dirItem =
     match dirItem with
