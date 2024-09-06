@@ -20,12 +20,13 @@ let rec getAllFiles dir pattern : seq<DirectoryItem> =
             yield! getAllFiles d pattern
     }
 
-    items |> Seq.rev // Rename files before their enclosing directory.
+    // Reversing snsures files are renamed before their enclosing directory.
+    items |> Seq.rev
 
 let rename path =
     let newGuid () = Guid.NewGuid().ToString()
 
-    let renameFile (oldName:string) =
+    let renameFile (oldName: string) =
         try
             let dir = Path.GetDirectoryName(oldName)
             let ext = Path.GetExtension(oldName) // Includes initial period
@@ -36,7 +37,7 @@ let rename path =
             | :? FileNotFoundException -> Error $"File \"{oldName}\" was not found."
             | e -> Error $"Failure renaming \"{oldName}\": {e.Message}"
 
-    let renameDir (oldName:string) =
+    let renameDir (oldName: string) =
         try
             let dir = Path.GetDirectoryName(oldName)
             let newName = Path.Combine(dir, newGuid())
@@ -51,7 +52,7 @@ let rename path =
     | DirectoryName d -> renameDir d
 
 getAllFiles "/Users/jd/Downloads/generated_files/" "*"
-|> Seq.map (fun dirItem -> rename dirItem)
-|> Seq.iter (fun res -> match res with
-                        | Ok s    -> printfn "[OK] %s" s
-                        | Error e -> printfn "[ERROR] %s" e)
+|> Seq.map (fun itemInDir -> rename itemInDir)
+|> Seq.iter (function
+             | Ok s    -> printfn "[OK] %s" s
+             | Error e -> printfn "[ERROR] %s" e)
