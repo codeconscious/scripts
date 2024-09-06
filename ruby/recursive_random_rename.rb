@@ -11,13 +11,11 @@ def rename_directory_items(dir, whitelisted_extensions)
     new_name = SecureRandom.uuid
 
     if File.directory?(full_path)
-      new_dir_path = File.join(dir, new_name)
-      FileUtils.mv(full_path, new_dir_path)
-      puts "Renamed directory '#{full_path}' to '#{new_dir_path}'"
+      new_dir_path = rename_directory(dir, full_path, new_name)
       results[:dirs] += 1
 
       inner_results = rename_directory_items(new_dir_path, whitelisted_extensions)
-      results = sum_hashes(results, inner_results)
+      results = merge_hashes(results, inner_results)
     else
       rename_result_type = rename_file(dir, full_path, new_name, whitelisted_extensions)
       results[:files][rename_result_type] += 1
@@ -27,17 +25,24 @@ def rename_directory_items(dir, whitelisted_extensions)
   results
 end
 
-def sum_hashes(target_h, source_h)
-  source_h.keys.each do |k|
-    case source_h[k]
+def merge_hashes(target, source)
+  source.keys.each do |key|
+    case source[key]
     when Hash then
-      target_h[k] = sum_hashes(target_h[k], source_h[k])
+      target[key] = merge_hashes(target[key], source[key])
     else
-      target_h[k] += source_h[k]
+      target[key] += source[key]
     end
   end
 
-  target_h
+  target
+end
+
+def rename_directory(dir, full_path, new_name)
+  new_dir_path = File.join(dir, new_name)
+  FileUtils.mv(full_path, new_dir_path)
+  puts "Renamed directory '#{full_path}' to '#{new_dir_path}'"
+  new_dir_path
 end
 
 def rename_file(dir, full_path, new_base_name, whitelisted_extensions)
