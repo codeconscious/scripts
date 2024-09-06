@@ -10,6 +10,7 @@ type DirectoryItem =
 let rec getAllFiles dir pattern =
     seq { yield! Directory.EnumerateFiles(dir, pattern)
           for d in Directory.EnumerateDirectories(dir) do
+              yield d
               yield! getAllFiles d pattern }
 
 getAllFiles "/Users/jd/Downloads/generated_files/" "*"
