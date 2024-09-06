@@ -16,8 +16,8 @@ def rename_directory_items(dir, whitelisted_extensions)
       puts "Renamed directory '#{full_path}' to '#{new_dir_path}'"
       results[:dirs] += 1
 
-      dir_rename_results = rename_directory_items(new_dir_path, whitelisted_extensions)
-      results = sum_hashes(results, dir_rename_results)
+      inner_results = rename_directory_items(new_dir_path, whitelisted_extensions)
+      results = sum_hashes(results, inner_results)
     else
       rename_result_type = rename_file(dir, full_path, new_name, whitelisted_extensions)
       results[:files][rename_result_type] += 1
