@@ -13,9 +13,9 @@ let rec getAllFiles dir pattern =
               yield d
               yield! getAllFiles d pattern }
 
-getAllFiles "/Users/jd/Downloads/generated_files/" "*"
-|> Seq.where (fun n -> Path.GetFileName(n)[0] <> '.')
-|> Seq.iter (fun n -> printfn "%A" n)
+let isDir (path:string) =
+    let attr = File.GetAttributes(path)
+    attr.HasFlag(FileAttributes.Directory)
 
 let renameFile oldName newName =
     try
@@ -30,3 +30,7 @@ let renameDir oldName newName =
     with
         | :? FileNotFoundException -> Error $"Directory \"{oldName}\" was not found."
         | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
+
+getAllFiles "/Users/jd/Downloads/generated_files/" "*"
+|> Seq.where (fun p -> Path.GetFileName(p)[0] <> '.')
+|> Seq.iter (fun p -> printfn "[%s] %s" (if isDir p then "D" else "F") p)
