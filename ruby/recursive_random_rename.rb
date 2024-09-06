@@ -1,18 +1,23 @@
 require 'securerandom'
 require 'fileutils'
 
-def rename_recursively(dir, whitelisted_extensions)
+def rename_directory_items(dir, whitelisted_extensions)
   results = { dirs: 0, files: { success: 0, ignored: 0 } }
 
   Dir.foreach(dir) do |dir_or_file|
-    next if dir_or_file == '.' || dir_or_file == '..' # Skip current and parent directory entries
+    next if dir_or_file == '.' || dir_or_file == '..' || dir_or_file[0] == '.'
 
     full_path = File.join(dir, dir_or_file)
     new_name = SecureRandom.uuid
 
     if File.directory?(full_path)
-      rename_directory(dir, full_path, new_name)
+      new_dir_path = File.join(dir, new_name)
+      FileUtils.mv(full_path, new_dir_path)
+      puts "Renamed directory '#{full_path}' to '#{new_dir_path}'"
       results[:dirs] += 1
+
+      dir_rename_results = rename_directory_items(new_dir_path, whitelisted_extensions)
+      results = sum_hashes(results, dir_rename_results)
     else
       rename_result_type = rename_file(dir, full_path, new_name, whitelisted_extensions)
       results[:files][rename_result_type] += 1
@@ -22,12 +27,17 @@ def rename_recursively(dir, whitelisted_extensions)
   results
 end
 
-def rename_directory(dir, full_path, new_name)
-  new_dir_path = File.join(dir, new_name)
-  FileUtils.mv(full_path, new_dir_path)
-  puts "Renamed directory '#{full_path}' to '#{new_dir_path}'"
+def sum_hashes(target_h, source_h)
+  source_h.keys.each do |k|
+    case source_h[k]
+    when Hash then
+      target_h[k] = sum_hashes(target_h[k], source_h[k])
+    else
+      target_h[k] += source_h[k]
+    end
+  end
 
-  rename_recursively(new_dir_path)
+  target_h
 end
 
 def rename_file(dir, full_path, new_base_name, whitelisted_extensions)
@@ -82,5 +92,5 @@ whitelisted_extensions =
     []
   end
 
-results = rename_recursively(directory, whitelisted_extensions)
+results = rename_directory_items(directory, whitelisted_extensions)
 print_results(results)
