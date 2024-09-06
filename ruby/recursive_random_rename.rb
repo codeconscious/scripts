@@ -25,17 +25,21 @@ def rename_directory_items(dir, whitelisted_extensions)
   results
 end
 
-def merge_hashes(target, source)
-  source.keys.each do |key|
-    case source[key]
+# Recursively sums the values in two hashes. Assumes identical hash structures
+# and that all values are either integers or hashes. Returns a new, summed hash.
+def merge_hashes(left, right)
+  summed = Hash.new(0)
+
+  left.keys.each do |key|
+    case left[key]
     when Hash then
-      target[key] = merge_hashes(target[key], source[key])
+      summed[key] = merge_hashes(left[key], right[key])
     else
-      target[key] += source[key]
+      summed[key] = left[key] + right[key]
     end
   end
 
-  target
+  summed
 end
 
 def rename_directory(dir, full_path, new_name)
