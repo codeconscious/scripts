@@ -1,4 +1,5 @@
 open System.IO
+open System
 
 type DirectoryItem =
     | DirectoryName of string
@@ -20,16 +21,24 @@ let rec getAllFiles dir pattern : seq<DirectoryItem> =
     }
 
 let rename path newName =
-    let renameFile oldName newName =
+    let renameFile (oldName:string) newName =
         try
-            Ok <| File.Move(oldName, newName)
+            let dir = Path.GetDirectoryName(oldName)
+            let ext = Path.GetExtension(oldName) // Includes initial period
+            // let separator = Path.DirectorySeparatorChar
+            let qualifiedNewName = Path.Combine(dir, $"{newName}{ext}")
+            File.Move(oldName, qualifiedNewName)
+            Ok $"Renamed file \"{oldName}\" to \"{qualifiedNewName}\"."
         with
             | :? FileNotFoundException -> Error $"File \"{oldName}\" was not found."
             | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
 
-    let renameDir oldName newName =
+    let renameDir (oldName:string) newName =
         try
-            Ok <| Directory.Move(oldName, newName)
+            let dir = Path.GetDirectoryName(oldName)
+            let qualifiedNewName = Path.Combine(dir, newName)
+            Directory.Move(oldName, qualifiedNewName)
+            Ok $"Renamed directory \"{oldName}\" to \"{qualifiedNewName}\"."
         with
             | :? FileNotFoundException -> Error $"Directory \"{oldName}\" was not found."
             | e -> Error $"Failure renaming \"{oldName}\" to \"{newName}\": {e.Message}"
@@ -38,11 +47,10 @@ let rename path newName =
     | FileName f -> renameFile f newName
     | DirectoryName d -> renameDir d newName
 
-let summarize dirItem =
-    match dirItem with
-    | DirectoryName d -> $"- {d}"
-    | FileName f -> $"  {f}"
+let newGuid = Guid.NewGuid().ToString()
 
 getAllFiles "/Users/jd/Downloads/generated_files/" "*"
-// |> Seq.where (fun p -> Path.GetFileName(p)[0] <> '.')
-|> Seq.iter (fun p -> printfn "%s" (summarize p))
+|> Seq.map (fun f -> rename f newGuid)
+|> Seq.iter (fun res -> match res with
+                        | Ok s    -> printfn "[OK] %s" s
+                        | Error e -> printfn "[ERROR] %s" e)
