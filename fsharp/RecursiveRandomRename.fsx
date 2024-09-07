@@ -3,8 +3,8 @@ open System
 
 type DirectoryItem =
     | Directory of string
-    | HiddenDirectory of string
     | File of string
+    | HiddenDirectory of string
     | HiddenFile of string
 
 let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
@@ -56,8 +56,15 @@ let rename path =
     | Directory d -> renameDir d
     | HiddenDirectory d -> Ok <| sprintf $"Ignoring hidden directory \"{d}\"."
 
+let print = function
+    | Ok msg ->
+        printfn "[OK] %s" msg
+    | Error e ->
+        Console.ForegroundColor <- ConsoleColor.Red
+        printfn "[ERROR] %s" e
+        Console.ResetColor()
+
+
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*"
 |> Seq.map (fun itemInDir -> rename itemInDir)
-|> Seq.iter (function
-             | Ok s    -> printfn "[OK] %s" s
-             | Error e -> printfn "[ERROR] %s" e)
+|> Seq.iter (fun res -> print res)
