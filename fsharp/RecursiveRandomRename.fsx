@@ -7,6 +7,11 @@ type DirectoryItem =
     | HiddenDirectory of string
     | HiddenFile of string
 
+type RenameResult =
+    | Renamed of string
+    | Ignored of string
+    | Failed of string
+
 let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
     let isHidden (path: string) : bool =
         match path with
@@ -34,10 +39,10 @@ let rename path =
             let newName = $"{newGuid()}{ext}"
             let newPath = Path.Combine(dir, newName)
             File.Move(oldName, newPath)
-            Ok $"File \"{oldName}\" → \"{newName}\""
+            Renamed $"File \"{oldName}\" → \"{newName}\""
         with
-            | :? FileNotFoundException -> Error $"File \"{oldName}\" was not found."
-            | e -> Error $"Failure renaming file \"{oldName}\": {e.Message}"
+            | :? FileNotFoundException -> Failed $"File \"{oldName}\" was not found."
+            | e -> Failed $"Failure renaming file \"{oldName}\": {e.Message}"
 
     let renameDir (oldName: string) =
         try
@@ -45,25 +50,28 @@ let rename path =
             let newName = newGuid()
             let newPath = Path.Combine(dir, newName)
             Directory.Move(oldName, newPath)
-            Ok $"Directory \"{oldName}\" → \"{newName}\""
+            Renamed $"Directory \"{oldName}\" → \"{newName}\""
         with
-            | :? FileNotFoundException -> Error $"Directory \"{oldName}\" was not found."
-            | e -> Error $"Failure renaming directory \"{oldName}\": {e.Message}"
+            | :? FileNotFoundException -> Failed $"Directory \"{oldName}\" was not found."
+            | e -> Failed $"Failure renaming directory \"{oldName}\": {e.Message}"
 
     match path with
     | File f -> renameFile f
-    | HiddenFile f -> Ok <| sprintf $"Ignored hidden file \"{f}\""
+    | HiddenFile f -> Ignored <| sprintf $"Hidden file \"{f}\""
     | Directory d -> renameDir d
-    | HiddenDirectory d -> Ok <| sprintf $"Ignored hidden directory \"{d}\""
+    | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
 
 let print = function
-    | Ok msg ->
-        printfn "[OK] %s" msg
-    | Error e ->
-        Console.ForegroundColor <- ConsoleColor.Red
-        printfn "[ERROR] %s" e
+    | Renamed msg ->
+        printfn "[Renamed] %s" msg
+    | Ignored msg ->
+        Console.ForegroundColor <- ConsoleColor.DarkGray
+        printfn "[Ignored] %s" msg
         Console.ResetColor()
-
+    | Failed e ->
+        Console.ForegroundColor <- ConsoleColor.Red
+        printfn "[Error] %s" e
+        Console.ResetColor()
 
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*"
 |> Seq.map (fun itemInDir -> rename itemInDir)
