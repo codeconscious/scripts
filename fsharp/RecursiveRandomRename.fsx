@@ -67,4 +67,4 @@ let print = function
 
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*"
 |> Seq.map (fun itemInDir -> rename itemInDir)
-|> Seq.iter (fun res -> print res)
+|> Seq.iter (fun result -> print result)
