@@ -34,10 +34,10 @@ let rename path =
             let newName = $"{newGuid()}{ext}"
             let newPath = Path.Combine(dir, newName)
             File.Move(oldName, newPath)
-            Ok $"Renamed file \"{oldName}\" to \"{newName}\"."
+            Ok $"File \"{oldName}\" → \"{newName}\""
         with
             | :? FileNotFoundException -> Error $"File \"{oldName}\" was not found."
-            | e -> Error $"Failure renaming \"{oldName}\": {e.Message}"
+            | e -> Error $"Failure renaming file \"{oldName}\": {e.Message}"
 
     let renameDir (oldName: string) =
         try
@@ -45,16 +45,16 @@ let rename path =
             let newName = newGuid()
             let newPath = Path.Combine(dir, newName)
             Directory.Move(oldName, newPath)
-            Ok $"Renamed directory \"{oldName}\" to \"{newName}\"."
+            Ok $"Directory \"{oldName}\" → \"{newName}\""
         with
             | :? FileNotFoundException -> Error $"Directory \"{oldName}\" was not found."
-            | e -> Error $"Failure renaming \"{oldName}\": {e.Message}"
+            | e -> Error $"Failure renaming directory \"{oldName}\": {e.Message}"
 
     match path with
     | File f -> renameFile f
-    | HiddenFile f -> Ok <| sprintf $"Ignoring hidden file \"{f}\"."
+    | HiddenFile f -> Ok <| sprintf $"Ignored hidden file \"{f}\""
     | Directory d -> renameDir d
-    | HiddenDirectory d -> Ok <| sprintf $"Ignoring hidden directory \"{d}\"."
+    | HiddenDirectory d -> Ok <| sprintf $"Ignored hidden directory \"{d}\""
 
 let print = function
     | Ok msg ->
