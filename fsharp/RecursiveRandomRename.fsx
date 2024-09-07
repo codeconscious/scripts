@@ -21,12 +21,16 @@ let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
             attrs.HasFlag(FileAttributes.Hidden)
 
     seq {
+        let isHiddenDir = dir |> isHidden
+
         for dir in Directory.EnumerateDirectories(dir) do
             yield! allDirectoryItems dir pattern
-            yield (if dir |> isHidden then HiddenDirectory dir else Directory dir)
+            yield (if isHiddenDir then HiddenDirectory dir else Directory dir)
 
-        yield! Directory.EnumerateFiles(dir, pattern)
-               |> Seq.map (fun p -> if p |> isHidden then HiddenFile p else File p)
+        yield! match isHiddenDir with
+               | true  -> Seq.empty<DirectoryItem>
+               | false -> Directory.EnumerateFiles(dir, pattern)
+                          |> Seq.map (fun p -> if p |> isHidden then HiddenFile p else File p)
     }
 
 let rename path =
