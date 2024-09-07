@@ -15,20 +15,14 @@ let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
             let attrs = File.GetAttributes(p)
             attrs.HasFlag(FileAttributes.Hidden)
 
-    let items = seq {
-        yield! Directory.EnumerateFiles(dir, pattern)
-               |> Seq.map (fun p -> match p |> isHidden with
-                                    | true -> HiddenFile p
-                                    | false -> File p)
-
+    seq {
         for dir in Directory.EnumerateDirectories(dir) do
-            yield (if isHidden dir then HiddenDirectory dir else Directory dir)
             yield! allDirectoryItems dir pattern
-    }
+            yield (if dir |> isHidden then HiddenDirectory dir else Directory dir)
 
-    // Reversing ensures files are renamed before their enclosing directory,
-    // thus preventing renaming failures.
-    items |> Seq.rev
+        yield! Directory.EnumerateFiles(dir, pattern)
+               |> Seq.map (fun p -> if p |> isHidden then HiddenFile p else File p)
+    }
 
 let rename path =
     let newGuid () = Guid.NewGuid().ToString()
