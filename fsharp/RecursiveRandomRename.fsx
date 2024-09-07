@@ -2,30 +2,32 @@ open System.IO
 open System
 
 type DirectoryItem =
-    | DirectoryName of string
-    | FileName of string
+    | Directory of string
+    | HiddenDirectory of string
+    | File of string
+    | HiddenFile of string
 
 let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
-    let isNotHidden (path: string) =
+    let isHidden (path: string) : bool =
         match path with
-        | p when p[0] = '.'
-            -> false
+        | p when p[0] = '.' -> true
         | p ->
             let attrs = File.GetAttributes(p)
-            not <| attrs.HasFlag(FileAttributes.Hidden)
+            attrs.HasFlag(FileAttributes.Hidden)
 
     let items = seq {
         yield! Directory.EnumerateFiles(dir, pattern)
-               |> Seq.where (fun f -> isNotHidden f)
-               |> Seq.map FileName
+               |> Seq.map (fun p -> match p |> isHidden with
+                                    | true -> HiddenFile p
+                                    | false -> File p)
 
-        for d in Directory.EnumerateDirectories(dir) do
-            yield DirectoryName d
-            yield! allDirectoryItems d pattern
+        for dir in Directory.EnumerateDirectories(dir) do
+            yield (if isHidden dir then HiddenDirectory dir else Directory dir)
+            yield! allDirectoryItems dir pattern
     }
 
     // Reversing ensures files are renamed before their enclosing directory,
-    // preventing renaming errors.
+    // thus preventing renaming failures.
     items |> Seq.rev
 
 let rename path =
@@ -55,8 +57,10 @@ let rename path =
             | e -> Error $"Failure renaming \"{oldName}\": {e.Message}"
 
     match path with
-    | FileName f -> renameFile f
-    | DirectoryName d -> renameDir d
+    | File f -> renameFile f
+    | HiddenFile f -> Ok <| sprintf $"Ignoring hidden file \"{f}\"."
+    | Directory d -> renameDir d
+    | HiddenDirectory d -> Ok <| sprintf $"Ignoring hidden directory \"{d}\"."
 
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*"
 |> Seq.map (fun itemInDir -> rename itemInDir)
