@@ -13,45 +13,26 @@ type RenameResult =
     | Failed of string
 
 let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
-    let isHiddenDir (path: string) : bool =
-        let itemName = DirectoryInfo(path).Name
-        // printfn $"isHidden path: {path}"
-        // printfn $"isHidden itemName: {itemName}"
+    let isHidden isDir path : bool =
+        let itemName = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
         match itemName with
-        | p when p[0] = '.' ->
-            // printfn $"itemName1: {itemName}"
-            true
+        | p when p[0] = '.' -> true
         | _ ->
-            // printfn $"itemName2: {itemName}"
-            let attrs = File.GetAttributes(path)
-            attrs.HasFlag(FileAttributes.Hidden)
-
-    let isHiddenFile (path: string) : bool =
-        let itemName = Path.GetFileName(path)
-        match itemName with
-        | p when p[0] = '.' ->
-            // printfn $"itemName1: {itemName}"
-            true
-        | _ ->
-            // printfn $"itemName2: {itemName}"
             let attrs = File.GetAttributes(path)
             attrs.HasFlag(FileAttributes.Hidden)
 
     seq {
-        let currentDirIsHidden = isChildOfHidden || dir |> isHiddenDir
-        // printfn $"<DEBUG> Dir: {dir}  |  Hidden: {currentDirIsHidden}  |  isChildOfHidden: {isChildOfHidden}"
+        let thisDirIsHidden = isChildOfHidden || dir |> isHidden true
 
         for d in Directory.EnumerateDirectories(dir) do
-            let childDirIsHidden = isChildOfHidden || d |> isHiddenDir
+            let childDirIsHidden = isChildOfHidden || d |> isHidden true
             yield! allDirectoryItems d pattern childDirIsHidden
             yield if childDirIsHidden then HiddenDirectory d else Directory d
-            // let a = if isHiddenDirBool then HiddenDirectory d else Directory d
-            // printfn $"<DEBUG d> {d} is {a}"
 
         let files = Directory.EnumerateFiles(dir, pattern)
-        yield! match currentDirIsHidden with
+        yield! match thisDirIsHidden with
                | true  -> files |> Seq.map (fun p -> HiddenFile p)
-               | false -> files |> Seq.map (fun p -> if p |> isHiddenFile then HiddenFile p else File p)
+               | false -> files |> Seq.map (fun p -> if p |> isHidden false then HiddenFile p else File p)
     }
 
 let rename path =
@@ -63,8 +44,8 @@ let rename path =
             let ext = Path.GetExtension(oldName) // Includes initial period
             let newName = $"{newGuid()}{ext}"
             let newPath = Path.Combine(dir, newName)
-            // File.Move(oldName, newPath)
-            Renamed $"File \"{oldName}\" → \"{newPath}\""
+            File.Move(oldName, newPath)
+            Renamed $"File \"{oldName}\" → \"{newName}\""
         with
             | :? FileNotFoundException -> Failed $"File \"{oldName}\" was not found."
             | e -> Failed $"Failure renaming file \"{oldName}\": {e.Message}"
@@ -74,8 +55,8 @@ let rename path =
             let dir = Path.GetDirectoryName(oldName)
             let newName = newGuid()
             let newPath = Path.Combine(dir, newName)
-            // Directory.Move(oldName, newPath)
-            Renamed $"Directory \"{oldName}\" → \"{newPath}\""
+            Directory.Move(oldName, newPath)
+            Renamed $"Directory \"{oldName}\" → \"{newName}\""
         with
             | :? FileNotFoundException -> Failed $"Directory \"{oldName}\" was not found."
             | e -> Failed $"Failure renaming directory \"{oldName}\": {e.Message}"
@@ -99,6 +80,5 @@ let print = function
         Console.ResetColor()
 
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*" false
-// |> Seq.iter (fun di -> printfn $"{di}")
 |> Seq.map (fun itemInDir -> rename itemInDir)
 |> Seq.iter (fun result -> print result)
