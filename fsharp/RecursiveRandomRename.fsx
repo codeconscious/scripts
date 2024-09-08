@@ -22,17 +22,18 @@ let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
             attrs.HasFlag(FileAttributes.Hidden)
 
     seq {
+        // Handle the files in this directory.
         let thisDirIsHidden = isChildOfHidden || dir |> isHidden true
-
-        for d in Directory.EnumerateDirectories(dir) do
-            let childDirIsHidden = isChildOfHidden || d |> isHidden true
-            yield! allDirectoryItems d pattern childDirIsHidden
-            yield if childDirIsHidden then HiddenDirectory d else Directory d
-
         let files = Directory.EnumerateFiles(dir, pattern)
         yield! match thisDirIsHidden with
                | true  -> files |> Seq.map (fun p -> HiddenFile p)
                | false -> files |> Seq.map (fun p -> if p |> isHidden false then HiddenFile p else File p)
+
+        // Recursively handle any subdirectories and their files.
+        for subDir in Directory.EnumerateDirectories(dir) do
+            let subDirIsHidden = isChildOfHidden || subDir |> isHidden true
+            yield! allDirectoryItems subDir pattern subDirIsHidden
+            yield if subDirIsHidden then HiddenDirectory subDir else Directory subDir
     }
 
 let rename path =
