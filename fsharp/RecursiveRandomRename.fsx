@@ -14,23 +14,28 @@ type RenameResult =
 
 let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
     let isHidden (path: string) : bool =
-        match path with
+        let itemName = Path.GetFileName(path)
+        // printfn $"isHidden path: {path}"
+        // printfn $"isHidden itemName: {itemName}"
+        match itemName with
+        | p when p.Length = 0 -> true // failwith $"Directory item at \"{path}\" has no filename to retrieve!"
         | p when p[0] = '.' -> true
-        | p ->
-            let attrs = File.GetAttributes(p)
+        | _ ->
+            let attrs = File.GetAttributes(path)
             attrs.HasFlag(FileAttributes.Hidden)
 
     seq {
         let isHiddenDir = dir |> isHidden
+        // printfn $"Dir: {dir}"
 
-        for dir in Directory.EnumerateDirectories(dir) do
-            yield! allDirectoryItems dir pattern
-            yield (if isHiddenDir then HiddenDirectory dir else Directory dir)
+        for d in Directory.EnumerateDirectories(dir) do
+            yield! allDirectoryItems d pattern
+            yield if isHiddenDir then HiddenDirectory d else Directory d
 
+        let files = Directory.EnumerateFiles(dir, pattern)
         yield! match isHiddenDir with
-               | true  -> Seq.empty<DirectoryItem>
-               | false -> Directory.EnumerateFiles(dir, pattern)
-                          |> Seq.map (fun p -> if p |> isHidden then HiddenFile p else File p)
+               | true  -> files |> Seq.map (fun p -> HiddenFile p)
+               | false -> files |> Seq.map (fun p -> if p |> isHidden then HiddenFile p else File p)
     }
 
 let rename path =
@@ -42,8 +47,8 @@ let rename path =
             let ext = Path.GetExtension(oldName) // Includes initial period
             let newName = $"{newGuid()}{ext}"
             let newPath = Path.Combine(dir, newName)
-            File.Move(oldName, newPath)
-            Renamed $"File \"{oldName}\" → \"{newName}\""
+            // File.Move(oldName, newPath)
+            Renamed $"File \"{oldName}\" → \"{newPath}\""
         with
             | :? FileNotFoundException -> Failed $"File \"{oldName}\" was not found."
             | e -> Failed $"Failure renaming file \"{oldName}\": {e.Message}"
@@ -53,8 +58,8 @@ let rename path =
             let dir = Path.GetDirectoryName(oldName)
             let newName = newGuid()
             let newPath = Path.Combine(dir, newName)
-            Directory.Move(oldName, newPath)
-            Renamed $"Directory \"{oldName}\" → \"{newName}\""
+            // Directory.Move(oldName, newPath)
+            Renamed $"Directory \"{oldName}\" → \"{newPath}\""
         with
             | :? FileNotFoundException -> Failed $"Directory \"{oldName}\" was not found."
             | e -> Failed $"Failure renaming directory \"{oldName}\": {e.Message}"
@@ -78,5 +83,6 @@ let print = function
         Console.ResetColor()
 
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*"
+// |> Seq.iter (fun di -> printfn $"{di}")
 |> Seq.map (fun itemInDir -> rename itemInDir)
 |> Seq.iter (fun result -> print result)
