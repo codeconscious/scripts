@@ -12,30 +12,46 @@ type RenameResult =
     | Ignored of string
     | Failed of string
 
-let rec allDirectoryItems dir pattern : seq<DirectoryItem> =
-    let isHidden (path: string) : bool =
-        let itemName = Path.GetFileName(path)
+let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
+    let isHiddenDir (path: string) : bool =
+        let itemName = DirectoryInfo(path).Name
         // printfn $"isHidden path: {path}"
         // printfn $"isHidden itemName: {itemName}"
         match itemName with
-        | p when p.Length = 0 -> true // failwith $"Directory item at \"{path}\" has no filename to retrieve!"
-        | p when p[0] = '.' -> true
+        | p when p[0] = '.' ->
+            // printfn $"itemName1: {itemName}"
+            true
         | _ ->
+            // printfn $"itemName2: {itemName}"
+            let attrs = File.GetAttributes(path)
+            attrs.HasFlag(FileAttributes.Hidden)
+
+    let isHiddenFile (path: string) : bool =
+        let itemName = Path.GetFileName(path)
+        match itemName with
+        | p when p[0] = '.' ->
+            // printfn $"itemName1: {itemName}"
+            true
+        | _ ->
+            // printfn $"itemName2: {itemName}"
             let attrs = File.GetAttributes(path)
             attrs.HasFlag(FileAttributes.Hidden)
 
     seq {
-        let isHiddenDir = dir |> isHidden
-        // printfn $"Dir: {dir}"
+        let currentDirIsHidden = isChildOfHidden || dir |> isHiddenDir
+        // printfn $"<DEBUG> Dir: {dir}  |  Hidden: {currentDirIsHidden}  |  isChildOfHidden: {isChildOfHidden}"
 
         for d in Directory.EnumerateDirectories(dir) do
-            yield! allDirectoryItems d pattern
-            yield if isHiddenDir then HiddenDirectory d else Directory d
+            let childDirIsHidden = isChildOfHidden || d |> isHiddenDir
+            yield! allDirectoryItems d pattern childDirIsHidden
+            yield if childDirIsHidden then HiddenDirectory d else Directory d
+            // let a = if isHiddenDirBool then HiddenDirectory d else Directory d
+            // printfn $"<DEBUG d> {d} is {a}"
 
         let files = Directory.EnumerateFiles(dir, pattern)
-        yield! match isHiddenDir with
+        yield! match currentDirIsHidden with
                | true  -> files |> Seq.map (fun p -> HiddenFile p)
-               | false -> files |> Seq.map (fun p -> if p |> isHidden then HiddenFile p else File p)
+               | false -> files |> Seq.map (fun p -> if p |> isHiddenFile then HiddenFile p else File p)
     }
 
 let rename path =
@@ -66,8 +82,8 @@ let rename path =
 
     match path with
     | File f -> renameFile f
-    | HiddenFile f -> Ignored <| sprintf $"Hidden file \"{f}\""
     | Directory d -> renameDir d
+    | HiddenFile f -> Ignored <| sprintf $"Hidden file \"{f}\""
     | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
 
 let print = function
@@ -82,7 +98,7 @@ let print = function
         printfn "[Error] %s" e
         Console.ResetColor()
 
-allDirectoryItems "/Users/jd/Downloads/generated_files/" "*"
+allDirectoryItems "/Users/jd/Downloads/generated_files/" "*" false
 // |> Seq.iter (fun di -> printfn $"{di}")
 |> Seq.map (fun itemInDir -> rename itemInDir)
 |> Seq.iter (fun result -> print result)
