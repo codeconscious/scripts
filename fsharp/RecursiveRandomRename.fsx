@@ -68,17 +68,19 @@ let rename path =
     | HiddenFile f -> Ignored <| sprintf $"Hidden file \"{f}\""
     | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
 
-let print = function
-    | Renamed msg ->
-        printfn "[Renamed] %s" msg
-    | Ignored msg ->
-        Console.ForegroundColor <- ConsoleColor.DarkGray
-        printfn "[Ignored] %s" msg
-        Console.ResetColor()
-    | Failed e ->
-        Console.ForegroundColor <- ConsoleColor.Red
-        printfn "[Error] %s" e
-        Console.ResetColor()
+let print =
+    let inColor (color: ConsoleColor option) msg =
+        match color with
+        | Some c ->
+            Console.ForegroundColor <- c
+            printfn $"{msg}"
+            Console.ResetColor()
+        | None -> printfn $"{msg}"
+
+    function
+    | Renamed msg -> $"[Renamed] {msg}" |> inColor None
+    | Ignored msg -> $"[Ignored] {msg}" |> inColor (Some ConsoleColor.DarkGray)
+    | Failed msg  -> $"[Error] {msg}"   |> inColor (Some ConsoleColor.Red)
 
 allDirectoryItems "/Users/jd/Downloads/generated_files/" "*" false
 |> Seq.map (fun itemInDir -> rename itemInDir)
