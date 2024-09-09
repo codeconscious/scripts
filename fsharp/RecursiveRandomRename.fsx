@@ -14,12 +14,12 @@ type RenameResult =
 
 let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
     let isHidden isDir path : bool =
-        let itemName = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
-        match itemName with
+        let name = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
+        match name with
         | p when p[0] = '.' -> true
         | _ ->
-            let attrs = File.GetAttributes(path)
-            attrs.HasFlag(FileAttributes.Hidden)
+            let attrs = File.GetAttributes path
+            attrs.HasFlag FileAttributes.Hidden
 
     seq {
         // Handle the files in this directory.
@@ -37,13 +37,13 @@ let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
     }
 
 let rename path =
-    let newGuid () = Guid.NewGuid().ToString()
+    let randomName () = Guid.NewGuid().ToString()
 
     let renameFile (oldName: string) =
         try
             let dir = Path.GetDirectoryName(oldName)
             let ext = Path.GetExtension(oldName) // Includes initial period
-            let newName = $"{newGuid()}{ext}"
+            let newName = $"{randomName()}{ext}"
             let newPath = Path.Combine(dir, newName)
             File.Move(oldName, newPath)
             Renamed $"File \"{oldName}\" → \"{newName}\""
@@ -54,7 +54,7 @@ let rename path =
     let renameDir (oldName: string) =
         try
             let dir = Path.GetDirectoryName(oldName)
-            let newName = newGuid()
+            let newName = randomName()
             let newPath = Path.Combine(dir, newName)
             Directory.Move(oldName, newPath)
             Renamed $"Directory \"{oldName}\" → \"{newName}\""
