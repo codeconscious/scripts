@@ -13,7 +13,7 @@ type RenameResult =
     | Failed of string
 
 let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
-    let isHidden isDir path : bool =
+    let checkHidden isDir path : bool =
         let name = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
         match name with
         | p when p[0] = '.' -> true
@@ -23,17 +23,17 @@ let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
 
     seq {
         // Handle the files in this directory.
-        let thisDirIsHidden = isChildOfHidden || dir |> isHidden true
+        let isThisDirHidden = isChildOfHidden || dir |> checkHidden true
         let files = Directory.EnumerateFiles(dir, pattern)
-        yield! match thisDirIsHidden with
+        yield! match isThisDirHidden with
                | true  -> files |> Seq.map (fun p -> HiddenFile p)
-               | false -> files |> Seq.map (fun p -> if p |> isHidden false then HiddenFile p else File p)
+               | false -> files |> Seq.map (fun p -> if p |> checkHidden false then HiddenFile p else File p)
 
         // Recursively handle any subdirectories and their files.
         for subDir in Directory.EnumerateDirectories(dir) do
-            let subDirIsHidden = isChildOfHidden || subDir |> isHidden true
-            yield! allDirectoryItems subDir pattern subDirIsHidden
-            yield if subDirIsHidden then HiddenDirectory subDir else Directory subDir
+            let isSubDirHidden = isChildOfHidden || subDir |> checkHidden true
+            yield! allDirectoryItems subDir pattern isSubDirHidden
+            yield if isSubDirHidden then HiddenDirectory subDir else Directory subDir
     }
 
 let rename path =
@@ -63,9 +63,9 @@ let rename path =
             | e -> Failed $"Failure renaming directory \"{oldName}\": {e.Message}"
 
     match path with
-    | File f -> renameFile f
-    | Directory d -> renameDir d
-    | HiddenFile f -> Ignored <| sprintf $"Hidden file \"{f}\""
+    | File f            -> renameFile f
+    | Directory d       -> renameDir d
+    | HiddenFile f      -> Ignored <| sprintf $"Hidden file \"{f}\""
     | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
 
 let print =
