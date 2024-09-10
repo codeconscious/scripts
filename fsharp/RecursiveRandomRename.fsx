@@ -1,18 +1,58 @@
 open System.IO
 open System
 
+module ArgValidation =
+    type Args = {
+        Directory: string
+        WhitelistedExtensions: string array }
+
+    type ResultBuilder() =
+        member this.Bind(m, f) =
+            match m with
+            | Error e -> Error e
+            | Ok a -> f a
+
+        member this.Return(x) =
+            Ok x
+
+    let result = new ResultBuilder()
+
+    let validateArgs =
+        let rawArgs =
+            fsi.CommandLineArgs
+            |> Array.toList
+            |> List.tail // The head contains the script filename.
+
+        let validateArgCount (args:string list) =
+            match args.Length with
+            | l when l = 1 -> Ok { Directory = args[0]; WhitelistedExtensions = [||] }
+            | l when l = 2 -> Ok { Directory = args[0]; WhitelistedExtensions = args[1].Split(',') }
+            | _ -> Error "You must supply a directory path. You can also optionally supply comma-separated extensions."
+
+        let validateDirectory args =
+            if Directory.Exists args.Directory
+            then Ok args
+            else Error $"Directory {args.Directory} does not exist."
+
+        result {
+            let! args = validateArgCount rawArgs
+            let! args' = validateDirectory args
+            return args'
+        }
+
 type DirectoryItem =
-    | Directory of string
     | File of string
-    | HiddenDirectory of string
+    | Directory of string
     | HiddenFile of string
+    | BlacklistedFile of string
+    | HiddenDirectory of string
 
 type RenameResult =
     | Renamed of string
     | Ignored of string
     | Failed of string
 
-let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
+let rec allDirectoryItems dir (whitelistedExts: string array) isChildOfHidden : seq<DirectoryItem> =
     let checkHidden isDir path : bool =
         let name = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
         match name with
@@ -24,15 +64,22 @@ let rec allDirectoryItems dir pattern isChildOfHidden : seq<DirectoryItem> =
     seq {
         // Handle the files in this directory.
         let isThisDirHidden = isChildOfHidden || dir |> checkHidden true
-        let files = Directory.EnumerateFiles(dir, pattern)
+        let files = Directory.EnumerateFiles(dir, "*")
         yield! match isThisDirHidden with
                | true  -> files |> Seq.map (fun p -> HiddenFile p)
-               | false -> files |> Seq.map (fun p -> if p |> checkHidden false then HiddenFile p else File p)
+               | false ->
+                    files
+                    |> Seq.map (fun f ->
+                        if f |> checkHidden false
+                        then HiddenFile f
+                        elif whitelistedExts.Length > 0 && whitelistedExts |> Array.contains (Path.GetExtension(f))
+                        then File f
+                        else BlacklistedFile f)
 
         // Recursively handle any subdirectories and their files.
         for subDir in Directory.EnumerateDirectories(dir) do
             let isSubDirHidden = isChildOfHidden || subDir |> checkHidden true
-            yield! allDirectoryItems subDir pattern isSubDirHidden
+            yield! allDirectoryItems subDir whitelistedExts isSubDirHidden
             yield if isSubDirHidden then HiddenDirectory subDir else Directory subDir
     }
 
@@ -66,6 +113,7 @@ let rename path =
     | File f            -> renameFile f
     | Directory d       -> renameDir d
     | HiddenFile f      -> Ignored <| sprintf $"Hidden file \"{f}\""
+    | BlacklistedFile f -> Ignored <| sprintf $"Blacklisted file \"{f}\""
     | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
 
 let print =
@@ -82,6 +130,11 @@ let print =
     | Ignored msg -> $"[Ignored] {msg}" |> inColor (Some ConsoleColor.DarkGray)
     | Failed msg  -> $"[Error] {msg}"   |> inColor (Some ConsoleColor.Red)
 
-allDirectoryItems "/Users/jd/Downloads/generated_files/" "*" false
-|> Seq.map (fun itemInDir -> rename itemInDir)
-|> Seq.iter (fun result -> print result)
+open ArgValidation
+
+match validateArgs with
+| Error e -> printfn $"ERROR: {e}"
+| Ok args ->
+    allDirectoryItems args.Directory args.WhitelistedExtensions false
+    |> Seq.map (fun itemInDir -> rename itemInDir)
+    |> Seq.iter (fun result -> print result)
