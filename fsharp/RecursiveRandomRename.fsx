@@ -78,13 +78,12 @@ module Renaming =
             yield! match isThisDirHidden with
                    | true  -> Seq.empty // files |> Seq.map (fun p -> HiddenFile p)
                    | false ->
-                           files
-                           |> Seq.map (fun f ->
-                               if f |> checkHidden false
-                               then HiddenFile f
-                               elif includedExts |> Array.contains (Path.GetExtension(f))
-                               then File f
-                               else ExcludedFile f)
+                        files
+                        |> Seq.map (fun f ->
+                            if f |> checkHidden false then HiddenFile f
+                            elif includedExts |> Array.contains (Path.GetExtension(f)) then File f
+                            elif includedExts.Length = 0 then File f
+                            else ExcludedFile f)
 
             // Recursively handle any subdirectories and their files.
             for subDir in Directory.EnumerateDirectories(dir) do
@@ -124,7 +123,7 @@ module Renaming =
         | Directory d       -> renameDir d
         | HiddenFile f      -> Ignored <| sprintf $"Hidden file \"{f}\""
         | ExcludedFile f    -> Ignored <| sprintf $"Excluded file \"{f}\""
-        | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
+        | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\" (and any files within)"
 
 open ArgValidation
 open Renaming
