@@ -27,17 +27,26 @@ module ArgValidation =
             match args.Length with
             | l when l = 1 -> Ok { Directory = args[0]; IncludedExtensions = [||] }
             | l when l = 2 -> Ok { Directory = args[0]; IncludedExtensions = args[1].Split(',') }
-            | _ -> Error "You must supply a directory path. You can also optionally supply comma-separated extensions."
+            | _ -> Error "You must supply a directory path. Optionally, you can also supply comma-separated extensions (initial periods are optional) to limit file renaming to only files with those extensions."
 
         let validateDirectory args =
             if Directory.Exists args.Directory
             then Ok args
-            else Error $"Directory {args.Directory} does not exist."
+            else Error $"Directory {args.Directory} was not found."
+
+        let confirmExtensions args =
+            let safeExts =
+                args.IncludedExtensions
+                |> Seq.map (fun a -> if a[0] = '.' then a else $".{a}")
+                |> Array.ofSeq
+
+            Ok { args with IncludedExtensions = safeExts }
 
         result {
             let! args = validateArgCount rawArgs
             let! args' = validateDirectory args
-            return args'
+            let! args'' = confirmExtensions args'
+            return args''
         }
 
 module Renaming =
