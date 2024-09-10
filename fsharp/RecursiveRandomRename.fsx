@@ -23,7 +23,7 @@ module ArgValidation =
             |> Array.toList
             |> List.tail // The head contains the script filename.
 
-        let validateArgCount (args:string list) =
+        let validateArgCount (args: string list) =
             match args.Length with
             | l when l = 1 -> Ok { Directory = args[0]; IncludedExtensions = [||] }
             | l when l = 2 -> Ok { Directory = args[0]; IncludedExtensions = args[1].Split(',') }
@@ -62,7 +62,7 @@ module Renaming =
         | Ignored of string
         | Failed of string
 
-    let rec allDirectoryItems dir (includedExts: string array) isChildOfHidden : seq<DirectoryItem> =
+    let rec allDirectoryItems dir includedExts isChildOfHidden : seq<DirectoryItem> =
         let checkHidden isDir path : bool =
             let name = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
             match name with
@@ -130,7 +130,7 @@ open ArgValidation
 open Renaming
 
 let print =
-    let inColor (color: ConsoleColor option) msg =
+    let inColor color msg =
         match color with
         | Some c ->
             Console.ForegroundColor <- c
