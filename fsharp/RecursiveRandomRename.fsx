@@ -4,7 +4,7 @@ open System
 module ArgValidation =
     type Args = {
         Directory: string
-        WhitelistedExtensions: string array }
+        IncludedExtensions: string array }
 
     type ResultBuilder() =
         member this.Bind(m, f) =
@@ -25,8 +25,8 @@ module ArgValidation =
 
         let validateArgCount (args:string list) =
             match args.Length with
-            | l when l = 1 -> Ok { Directory = args[0]; WhitelistedExtensions = [||] }
-            | l when l = 2 -> Ok { Directory = args[0]; WhitelistedExtensions = args[1].Split(',') }
+            | l when l = 1 -> Ok { Directory = args[0]; IncludedExtensions = [||] }
+            | l when l = 2 -> Ok { Directory = args[0]; IncludedExtensions = args[1].Split(',') }
             | _ -> Error "You must supply a directory path. You can also optionally supply comma-separated extensions."
 
         let validateDirectory args =
@@ -45,7 +45,7 @@ module Renaming =
         | File of string
         | Directory of string
         | HiddenFile of string
-        | BlacklistedFile of string
+        | ExcludedFile of string
         | HiddenDirectory of string
 
     type RenameResult =
@@ -53,7 +53,7 @@ module Renaming =
         | Ignored of string
         | Failed of string
 
-    let rec allDirectoryItems dir (whitelistedExts: string array) isChildOfHidden : seq<DirectoryItem> =
+    let rec allDirectoryItems dir (includedExts: string array) isChildOfHidden : seq<DirectoryItem> =
         let checkHidden isDir path : bool =
             let name = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
             match name with
@@ -73,15 +73,14 @@ module Renaming =
                            |> Seq.map (fun f ->
                                if f |> checkHidden false
                                then HiddenFile f
-                               elif whitelistedExts.Length > 0 &&
-                                    whitelistedExts |> Array.contains (Path.GetExtension(f))
+                               elif includedExts |> Array.contains (Path.GetExtension(f))
                                then File f
-                               else BlacklistedFile f)
+                               else ExcludedFile f)
 
             // Recursively handle any subdirectories and their files.
             for subDir in Directory.EnumerateDirectories(dir) do
                 let isSubDirHidden = isChildOfHidden || subDir |> checkHidden true
-                yield! allDirectoryItems subDir whitelistedExts isSubDirHidden
+                yield! allDirectoryItems subDir includedExts isSubDirHidden
                 yield if isSubDirHidden then HiddenDirectory subDir else Directory subDir
         }
 
@@ -115,7 +114,7 @@ module Renaming =
         | File f            -> renameFile f
         | Directory d       -> renameDir d
         | HiddenFile f      -> Ignored <| sprintf $"Hidden file \"{f}\""
-        | BlacklistedFile f -> Ignored <| sprintf $"Blacklisted file \"{f}\""
+        | ExcludedFile f    -> Ignored <| sprintf $"Excluded file \"{f}\""
         | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\""
 
 open ArgValidation
@@ -138,6 +137,6 @@ let print =
 match validateArgs with
 | Error e -> printfn $"ERROR: {e}"
 | Ok args ->
-    allDirectoryItems args.Directory args.WhitelistedExtensions false
+    allDirectoryItems args.Directory args.IncludedExtensions false
     |> Seq.map (fun itemInDir -> rename itemInDir)
     |> Seq.iter (fun result -> print result)
