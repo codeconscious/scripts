@@ -73,7 +73,8 @@ module Renaming =
                            |> Seq.map (fun f ->
                                if f |> checkHidden false
                                then HiddenFile f
-                               elif whitelistedExts.Length > 0 && whitelistedExts |> Array.contains (Path.GetExtension(f))
+                               elif whitelistedExts.Length > 0 &&
+                                    whitelistedExts |> Array.contains (Path.GetExtension(f))
                                then File f
                                else BlacklistedFile f)
 
