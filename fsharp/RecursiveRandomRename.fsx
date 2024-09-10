@@ -76,7 +76,7 @@ module Renaming =
             let isThisDirHidden = isChildOfHidden || dir |> checkHidden true
             let files = Directory.EnumerateFiles(dir, "*")
             yield! match isThisDirHidden with
-                   | true  -> files |> Seq.map (fun p -> HiddenFile p)
+                   | true  -> Seq.empty // files |> Seq.map (fun p -> HiddenFile p)
                    | false ->
                            files
                            |> Seq.map (fun f ->
