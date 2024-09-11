@@ -159,8 +159,10 @@ let print =
     | Failed msg  -> $"[Error] {msg}"   |> inColor (Some ConsoleColor.Red)
 
 match validateArgs with
-| Error e -> printfn $"ERROR: {e}"
 | Ok args ->
     allDirectoryItems args.Directory args.IncludedExtensions false
     |> Seq.map (fun itemInDir -> rename itemInDir)
     |> Seq.iter (fun result -> print result)
+| Error e ->
+    printfn $"ERROR: {e}"
+    exit 1
