@@ -23,29 +23,29 @@ module ArgValidation =
             |> Array.toList
             |> List.tail // The head contains the script filename.
 
-        let validateArgCount (args: string list) =
+        let checkCount (args: string list) =
             match args.Length with
             | l when l = 1 -> Ok { Directory = args[0]; IncludedExtensions = [||] }
             | l when l = 2 -> Ok { Directory = args[0]; IncludedExtensions = args[1].Split(',') }
             | _ -> Error "You must supply a directory path. Optionally, you can also supply comma-separated extensions (initial periods are optional) to limit file renaming to only files with those extensions."
 
-        let validateDirectory args =
+        let checkDirectory args =
             if Directory.Exists args.Directory
             then Ok args
             else Error $"Directory {args.Directory} was not found."
 
-        let confirmExtensions args =
-            let safeExts =
+        let checkExts args =
+            let confirmedExts =
                 args.IncludedExtensions
                 |> Seq.map (fun a -> if a[0] = '.' then a else $".{a}")
                 |> Array.ofSeq
 
-            Ok { args with IncludedExtensions = safeExts }
+            Ok { args with IncludedExtensions = confirmedExts }
 
         result {
-            let! args = validateArgCount rawArgs
-            let! args' = validateDirectory args
-            let! args'' = confirmExtensions args'
+            let! args = checkCount rawArgs
+            let! args' = checkDirectory args
+            let! args'' = checkExts args'
             return args''
         }
 
@@ -54,7 +54,7 @@ module Renaming =
         | File of string
         | Directory of string
         | HiddenFile of string
-        | ExcludedFile of string // Excluded via file extensions
+        | ExcludedFile of string
         | HiddenDirectory of string
 
     type RenameResult =
@@ -76,7 +76,8 @@ module Renaming =
             let isThisDirHidden = isChildOfHidden || dir |> checkHidden true
             let files = Directory.EnumerateFiles(dir, "*")
             yield! match isThisDirHidden with
-                   | true  -> Seq.empty // files |> Seq.map (fun p -> HiddenFile p)
+                   // | true  -> files |> Seq.map (fun p -> HiddenFile p) // Displays skipped files in hidden directories.
+                   | true  -> Seq.empty // Does not display skipped files in hidden directories.
                    | false ->
                         files
                         |> Seq.map (fun f ->
