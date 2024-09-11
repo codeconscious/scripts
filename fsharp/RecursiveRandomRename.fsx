@@ -161,8 +161,8 @@ let print =
 match validateArgs with
 | Ok args ->
     allDirectoryItems args.Directory args.IncludedExtensions false
-    |> Seq.map (fun itemInDir -> rename itemInDir)
-    |> Seq.iter (fun result -> print result)
+    |> Seq.map rename
+    |> Seq.iter print
 | Error e ->
     printfn $"ERROR: {e}"
     exit 1
