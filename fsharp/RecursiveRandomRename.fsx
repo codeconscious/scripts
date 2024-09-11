@@ -24,15 +24,30 @@ module ArgValidation =
             |> List.tail // The head contains the script filename.
 
         let checkCount (args: string list) =
+            let newLine = Environment.NewLine
+            let instructions = """
+Usage: dotnet fsi RecursiveRandomRename.fsx <DIRECTORY_PATH>
+           • Updates all non-hidden files
+
+       dotnet fsi RecursiveRandomRename.fsx <DIRECTORY_PATH> <EXT1,EXT2,EXT3,...>
+           • Renames only non-hidden files with the specific extensions
+           • The initial period is optional (i.e., '.m4a' == 'm4a')
+           Sample: dotnet fsi RecursiveRandomRename.fsx /users/me/Downloads/testing m4a,mp3,ogg
+
+Renaming cannot be undone, so back up your files first.
+            """
+
+            let appendInstructions text = $"{text}{newLine}{instructions}"
             match args.Length with
             | l when l = 1 -> Ok { Directory = args[0]; IncludedExtensions = [||] }
             | l when l = 2 -> Ok { Directory = args[0]; IncludedExtensions = args[1].Split(',') }
-            | _ -> Error "You must supply a directory path. Optionally, you can also supply comma-separated extensions (initial periods are optional) to limit file renaming to only files with those extensions."
+            | l when l > 2 -> Error ("Too many arguments."    |> appendInstructions)
+            | _ ->            Error ("No arguments supplied." |> appendInstructions)
 
         let checkDirectory args =
             if Directory.Exists args.Directory
             then Ok args
-            else Error $"Directory {args.Directory} was not found."
+            else Error $"Directory \"{args.Directory}\" was not found."
 
         let checkExts args =
             let confirmedExts =
