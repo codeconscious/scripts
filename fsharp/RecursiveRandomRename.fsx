@@ -54,7 +54,7 @@ module Renaming =
         | File of string
         | Directory of string
         | HiddenFile of string
-        | ExcludedFile of string
+        | ExcludedFile of string // Excluded via file extensions
         | HiddenDirectory of string
 
     type RenameResult =
@@ -62,7 +62,7 @@ module Renaming =
         | Ignored of string
         | Failed of string
 
-    let rec allDirectoryItems dir includedExts isChildOfHidden : seq<DirectoryItem> =
+    let rec allDirectoryItems dir includedExts isChildOfHidden : DirectoryItem seq =
         let checkHidden isDir path : bool =
             let name = if isDir then DirectoryInfo(path).Name else Path.GetFileName(path)
             match name with
