@@ -2,9 +2,7 @@ open System.IO
 open System
 
 module ArgValidation =
-    type Args = {
-        Directory: string
-        IncludedExtensions: string array }
+    type Args = { Directory: string; IncludedExtensions: string array }
 
     type ResultBuilder() =
         member this.Bind(m, f) =
@@ -24,7 +22,6 @@ module ArgValidation =
             |> List.tail // The head contains the script filename.
 
         let checkCount (args: string list) =
-            let newLine = Environment.NewLine
             let instructions = """
 Usage: dotnet fsi RecursiveRandomRename.fsx <DIRECTORY_PATH>
            • Updates all non-hidden files
@@ -34,10 +31,10 @@ Usage: dotnet fsi RecursiveRandomRename.fsx <DIRECTORY_PATH>
            • The initial period is optional (i.e., '.m4a' == 'm4a')
            Sample: dotnet fsi RecursiveRandomRename.fsx /users/me/Downloads/testing m4a,mp3,ogg
 
-Renaming cannot be undone, so back up your files first.
+Renaming cannot be undone, so be sure to back up your files first!
             """
 
-            let appendInstructions text = $"{text}{newLine}{instructions}"
+            let appendInstructions text = $"{text}{Environment.NewLine}{instructions}"
             match args.Length with
             | l when l = 1 -> Ok { Directory = args[0]; IncludedExtensions = [||] }
             | l when l = 2 -> Ok { Directory = args[0]; IncludedExtensions = args[1].Split(',') }
@@ -45,17 +42,17 @@ Renaming cannot be undone, so back up your files first.
             | _ ->            Error ("No arguments supplied." |> appendInstructions)
 
         let checkDirectory args =
-            if Directory.Exists args.Directory
+            if args.Directory |> Directory.Exists
             then Ok args
             else Error $"Directory \"{args.Directory}\" was not found."
 
         let checkExts args =
-            let confirmedExts =
+            let checkedExts =
                 args.IncludedExtensions
-                |> Seq.map (fun a -> if a[0] = '.' then a else $".{a}")
+                |> Seq.map (fun e -> if e[0] = '.' then e else $".{e}")
                 |> Array.ofSeq
 
-            Ok { args with IncludedExtensions = confirmedExts }
+            Ok { args with IncludedExtensions = checkedExts }
 
         result {
             let! args = checkCount rawArgs
@@ -144,7 +141,7 @@ module Renaming =
 open ArgValidation
 open Renaming
 
-let print =
+let printResult =
     let inColor color msg =
         match color with
         | Some c ->
@@ -162,7 +159,7 @@ match validateArgs with
 | Ok args ->
     allDirectoryItems args.Directory args.IncludedExtensions false
     |> Seq.map rename
-    |> Seq.iter print
+    |> Seq.iter printResult
 | Error e ->
     printfn $"ERROR: {e}"
     exit 1
