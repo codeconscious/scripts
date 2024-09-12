@@ -95,7 +95,6 @@ end
 whitelisted_extensions =
   if ARGV.length == 2
     ARGV[1].split(",")
-           .map(&:strip)
            .map { |ext| ext[0] == '.' ? ext : ".#{ext}" }
   else
     []
