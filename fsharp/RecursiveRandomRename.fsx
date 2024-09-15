@@ -160,6 +160,7 @@ match validateArgs with
     allDirectoryItems args.Directory args.IncludedExtensions false
     |> Seq.map rename
     |> Seq.iter printResult
+    0
 | Error e ->
     printfn $"ERROR: {e}"
-    exit 1
+    1
