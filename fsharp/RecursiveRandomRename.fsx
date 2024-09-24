@@ -18,10 +18,7 @@ module ArgValidation =
     let result = new ResultBuilder()
 
     let validateArgs =
-        let rawArgs =
-            fsi.CommandLineArgs
-            |> Array.toList
-            |> List.tail // The head contains the script filename.
+        let rawArgs = fsi.CommandLineArgs |> Array.toList |> List.tail // The head contains the script filename.
 
         let checkCount (args: string list) =
             let instructions = """
@@ -44,14 +41,16 @@ Renaming cannot be undone, so be sure to back up your files first!
             | _ ->            Error ("No arguments supplied." |> appendInstructions)
 
         let checkDirectory args =
-            if args.Directory |> Directory.Exists
+            if Directory.Exists args.Directory
             then Ok args
             else Error $"Directory \"{args.Directory}\" was not found."
+
+        let appendExtensionPeriod (ext: string) = if ext[0] = '.' then ext else $".{ext}"
 
         let checkExts args =
             let checkedExts =
                 args.IncludedExtensions
-                |> Seq.map (fun e -> if e[0] = '.' then e else $".{e}")
+                |> Seq.map appendExtensionPeriod
                 |> Array.ofSeq
 
             Ok { args with IncludedExtensions = checkedExts }
@@ -87,7 +86,7 @@ module Renaming =
 
         seq {
             // Handle the files in this directory.
-            let isThisDirHidden = isChildOfHidden || dir |> checkHidden true
+            let isThisDirHidden = isChildOfHidden || (dir |> checkHidden true)
             let files = Directory.EnumerateFiles(dir, "*")
             yield! match isThisDirHidden with
                    // | true  -> files |> Seq.map (fun p -> HiddenFile p) // Displays skipped files in hidden directories.
