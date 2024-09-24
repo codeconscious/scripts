@@ -2,7 +2,9 @@ open System.IO
 open System
 
 module ArgValidation =
-    type Args = { Directory: string; IncludedExtensions: string array }
+    type Args =
+        { Directory: string;
+          IncludedExtensions: string array }
 
     type ResultBuilder() =
         member this.Bind(m, f) =
