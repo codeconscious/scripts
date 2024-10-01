@@ -35,8 +35,11 @@ let fetchApiData (number : int) : Async<Result<ApiResponse,string>> =
 
 let number = Random().Next(1_100_000) // Only up to 1 million (exclusive) is supported.
 
-let result = fetchApiData number |> Async.RunSynchronously
-match result with
-| Ok data -> printfn $"{number} = {data.IsEven}  |  {data.Ad}"
-| Error e -> printfn $"Error: {e}"
+match fetchApiData number |> Async.RunSynchronously with
+| Ok data ->
+    let isEven = if data.IsEven then "IS" else "is NOT"
+    printfn $"{number} {isEven} even.{Environment.NewLine}[Ad] {data.Ad}"
+| Error e ->
+    printfn $"Error: {e}"
+
 0
