@@ -21,7 +21,7 @@ type ResultBuilder() =
     member this.Return(x) =
         Ok x
 
-let result = new ResultBuilder()
+let result = ResultBuilder()
 
 let processInputDir maybeDirPath =
     let tryDirInfo dirPath =
@@ -32,7 +32,7 @@ let processInputDir maybeDirPath =
     let summarizeFile (fi:FileInfo) =
         let createdAt = fi.CreationTime
         let modifiedAt = fi.LastWriteTime
-        sprintf "\"%s\",%A,%A" (fi.FullName) createdAt modifiedAt
+        $"\"%s{fi.FullName}\",%A{createdAt},%A{modifiedAt}"
 
     match tryDirInfo maybeDirPath with
     | Error e -> Error e

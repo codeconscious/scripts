@@ -54,25 +54,25 @@ let entryGroups =
             | :? FileNotFoundException -> Error $"\"{fileName}\" was not found."
             | e -> Error $"File access failed: {e.Message}"
 
-    let splitIntoLines (text:string) =
+    let splitIntoLines (text: string) =
         let options = StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries
         text.Split(Environment.NewLine, options)
 
-    let splitLinesBy (lines:string[]) (separator:char) =
+    let splitLinesBy (lines: string[]) (separator:char) =
         lines
         |> Array.map _.Split(separator, StringSplitOptions.TrimEntries)
 
-    let convertToTriplets (lines:(string array) array) =
+    let convertToTriplets (lines: string array array) =
         lines
         |> Array.filter (fun g -> g.Length = 3)
         |> Array.map (fun g -> (g[0], g[1], g[2]))
 
-    let entriesFromTriplets (groups:(string * string * string) array) =
+    let entriesFromTriplets (groups: (string * string * string) array) =
         let today = DateTime.Now |> DateOnly.FromDateTime
         let milestoneInterval = 1000
 
-        let createEntry (triplet:(string * string * string)) =
-            let createEvent (triplet:(string * string * string)) =
+        let createEntry (triplet: string * string * string) =
+            let createEvent (triplet: string * string * string) =
                 let category, name, dateText = triplet
                 let parsedDate = dateText |> DateOnly.Parse
                 let dayNumber = today.DayNumber - parsedDate.DayNumber + 1
@@ -80,7 +80,7 @@ let entryGroups =
                   Name = name
                   Date = parsedDate; DayNumber = dayNumber }
 
-            let milestone interval (event:Event) =
+            let milestone interval (event: Event) =
                 let daysSince = event.DayNumber
                 let daysOf = daysSince + interval - (daysSince % interval)
                 let daysUntil = daysOf - daysSince
@@ -98,7 +98,7 @@ let entryGroups =
 
         groups |> Array.map createEntry
 
-    let withValidDates (triplet:(string * string * string)) =
+    let withValidDates (triplet: string * string * string) =
         let today = DateTime.Now.Date |> DateOnly.FromDateTime
         let _, _, dateText = triplet
         let isValid, entryDate = dateText |> DateOnly.TryParse
@@ -107,7 +107,7 @@ let entryGroups =
         then false
         else entryDate <= today
 
-    let sortGroupData (groups:(string * Entry array)) =
+    let sortGroupData (groups: string * Entry array) =
          groups |>
          (fun (k, e) -> k, e
                         |> Array.sortBy _.Event.Date)
@@ -127,11 +127,11 @@ let entryGroups =
 
 type columnWidths = { First: int; Second: int; Third: int }
 
-let printGroupAligned (group:(string * Entry array)) =
+let printGroupAligned (group: string * Entry array) =
     let category, entries = group
     let padding = 1
 
-    let getColumnWidth (entries:Entry array) (item:Entry -> int) =
+    let getColumnWidth (entries: Entry array) (item: Entry -> int) =
         entries
         |> Array.map item
         |> Array.max
@@ -145,7 +145,7 @@ let printGroupAligned (group:(string * Entry array)) =
           Second = date
           Third = dayNo }
 
-    let thousands (i:int) =
+    let thousands (i: int) =
         System.String.Format("{0:#,##0}", i)
 
     let printEntry columnWidths entry =
@@ -167,7 +167,7 @@ let printGroupAligned (group:(string * Entry array)) =
             (summarizeMilestone entry.Milestone)
 
     printfn $"\n{category.ToUpperInvariant()}"
-    printfn "%s" (new String('-', category.Length))
+    printfn "%s" (String('-', category.Length))
     entries |> Array.iter (fun e -> e |> printEntry columnWidths)
 
 match entryGroups with

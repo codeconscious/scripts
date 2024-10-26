@@ -2,7 +2,7 @@
 
    Summary: Reads a single text file and splits its lines to the maximum line length
             limit provided. The prefix is included in the line length calculation, and it
-            must be shorter then the line length limit. The script will try to split lines
+            must be shorter than the line length limit. The script will try to split lines
             at spaces, but if none are found, it will cut the line at the line length limit.
 
    Requirements: .NET 8 runtime (Untested on previous versions, though it might work)
@@ -38,7 +38,7 @@ module ArgValidation =
         member this.Return(x) =
             Ok x
 
-    let result = new ResultBuilder()
+    let result = ResultBuilder()
 
     let validateArgs =
         let rawArgs =
@@ -56,7 +56,7 @@ module ArgValidation =
         let validateLimit (args:Args<string>) =
             match args with
             | { Args.Limit = l; Prefix = p; Args.File = f } ->
-                match (l |> System.Int32.TryParse) with
+                match (l |> Int32.TryParse) with
                 | true, i when i >= 2 -> Ok { Limit = i; Prefix = p; File = f }
                 | true, _ -> Error "Requested line length too short."
                 | _ -> Error "Maximum line length must be numeric."

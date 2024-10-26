@@ -204,7 +204,7 @@ module ArgValidation =
         member this.Return(x) =
             Ok x
 
-    let result = new ResultBuilder()
+    let result = ResultBuilder()
 
     let validate =
         let supportedStyleNames =
@@ -220,7 +220,7 @@ module ArgValidation =
 
         let argCount (rawArgs:string list) =
             let errorText =
-                System.String.Join(
+                String.Join(
                     Environment.NewLine,
                     ["Pass in (1) a style name and (2) a string containing only supported characters for that style.";
                     $"Supported styles: {supportedStyleNames}"]
@@ -237,7 +237,7 @@ module ArgValidation =
 
         let styleName args =
             let errorText =
-                System.String.Join(
+                String.Join(
                     Environment.NewLine,
                     [$"Style \"{args.Style}\" not found.";
                     $"Supported styles: {supportedStyleNames}"]

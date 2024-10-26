@@ -1,6 +1,6 @@
 open System.IO
 
-// Making F# faster and more interopable with task {…}
+// Making F# faster and more interoperable with task {…}
 
 let readFilesTask (path1, path2) =
    task {
@@ -18,7 +18,7 @@ let (|Int|_|) (str: string) =
    | _ -> ValueNone
 
 match "455" with
-| Int a -> "Is an int!"
+| Int _ -> "Is an int!"
 | _ -> "Not an int..."
 
 // Making F# more uniform: Formatting for binary numbers

@@ -15,7 +15,7 @@ module ArgValidation =
         member this.Return(x) =
             Ok x
 
-    let result = new ResultBuilder()
+    let result = ResultBuilder()
 
     let validateArgs =
         let rawArgs = fsi.CommandLineArgs |> Array.toList |> List.tail // The head contains the script filename.
@@ -135,9 +135,9 @@ module Renaming =
         match path with
         | File f            -> renameFile f
         | Directory d       -> renameDir d
-        | HiddenFile f      -> Ignored <| sprintf $"Hidden file \"{f}\""
-        | ExcludedFile f    -> Ignored <| sprintf $"Excluded file \"{f}\""
-        | HiddenDirectory d -> Ignored <| sprintf $"Hidden directory \"{d}\" (and any files within)"
+        | HiddenFile f      -> Ignored <| $"Hidden file \"{f}\""
+        | ExcludedFile f    -> Ignored <| $"Excluded file \"{f}\""
+        | HiddenDirectory d -> Ignored <| $"Hidden directory \"{d}\" (and any files within)"
 
 open ArgValidation
 open Renaming

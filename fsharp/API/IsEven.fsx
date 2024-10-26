@@ -33,7 +33,9 @@ let fetchApiData (number : int) : Async<Result<ApiResponse,string>> =
             return Error ex.Message
     }
 
-let number = Random().Next(1_100_000) // Only up to 1 million (exclusive) is supported.
+// Only up to 1 million (exclusive) is supported.
+// We go over slightly to experience errors too.
+let number = Random().Next(1_100_000)
 
 match fetchApiData number |> Async.RunSynchronously with
 | Ok data ->
