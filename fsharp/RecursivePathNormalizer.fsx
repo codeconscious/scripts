@@ -21,7 +21,7 @@ type Path =
     | Directory of string
 
 module ArgValidation =
-    let rawArgs = fsi.CommandLineArgs |> Array.toList |> List.tail // The head contains the script filename.
+    let private rawArgs = fsi.CommandLineArgs |> Array.toList |> List.tail // The head contains the script filename.
 
     let validate =
         match rawArgs with
@@ -39,7 +39,7 @@ module Renaming =
         | Ignored of string
         | Failed of string
 
-    let rec iterateFiles path : Path seq =
+    let rec private iterateFiles path : Path seq =
         match path with
         | File _ -> seq { yield path }
         | Directory d ->
@@ -56,7 +56,7 @@ module Renaming =
                     yield subDir
             }
 
-    let rename pathItem =
+    let private rename pathItem =
         let renameFile (oldName: string) (newName: string) =
             try
                 File.Move(oldName, newName)
@@ -86,6 +86,11 @@ module Renaming =
                 match pathItem with
                 | File f -> renameFile f newName
                 | Directory d -> renameDir d newName
+
+    let renameAll path =
+        path
+        |> iterateFiles
+        |> Seq.map rename
 
 module Printing =
     open Renaming
@@ -124,8 +129,7 @@ let processPath path =
     let watch = Startwatch()
 
     path
-    |> iterateFiles
-    |> Seq.map rename
+    |> renameAll
     |> Array.ofSeq
     |> summarize watch
 
