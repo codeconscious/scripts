@@ -21,30 +21,17 @@ type Path =
     | Directory of string
 
 module ArgValidation =
-    type ValidationResult =
-        | NoArgs
-        | TooManyArgs
-        | BadPath of string
-        | ValidPath of Path
-
     let rawArgs = fsi.CommandLineArgs |> Array.toList |> List.tail // The head contains the script filename.
 
-    let validate (args: string list) =
-        match args with
-        | t when t.Length = 0 -> NoArgs
-        | t when t.Length > 1 -> TooManyArgs
+    let validate =
+        match rawArgs with
+        | t when t.Length = 0 -> Error "No file or directory path was passed."
+        | t when t.Length > 1 -> Error "Too many arguments were passed. Enter a single file or directory path."
         | t ->
             let arg = t.Head
-            if Directory.Exists arg then ValidPath (Directory arg)
-            elif File.Exists arg then ValidPath (File arg)
-            else BadPath arg
-
-    let runValidation =
-        match validate rawArgs with
-        | NoArgs -> Error "No file or directory path was passed."
-        | TooManyArgs -> Error "Too many arguments were passed. Enter a single file or directory path."
-        | BadPath p -> Error $"Path \"{p}\" was not found."
-        | ValidPath p -> Ok p
+            if Directory.Exists arg then Ok (Directory arg)
+            elif File.Exists arg then Ok (File arg)
+            else Error $"Path \"{arg}\" was not found."
 
 module Renaming =
     type RenameResult =
@@ -142,7 +129,7 @@ let processPath path =
     |> Array.ofSeq
     |> summarize watch
 
-match runValidation with
+match validate with
 | Ok path ->
     processPath path
     0
