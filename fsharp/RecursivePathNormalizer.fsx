@@ -44,16 +44,12 @@ module Renaming =
         | File _ -> seq { yield path }
         | Directory d ->
             seq {
-                // Handle the files in the current directory.
-                let files = Directory.EnumerateFiles(d, "*")
+                yield! Directory.EnumerateFiles(d, "*") |> Seq.map (fun f -> File f)
 
-                yield! files |> Seq.map (fun f -> File f)
-
-                // Recursively handle any subdirectories and their files.
                 let subDirs = Directory.EnumerateDirectories d |> Seq.map (fun x -> Directory x)
                 for subDir in subDirs do
                     yield! iterateFiles subDir
-                    yield subDir
+                    yield subDir // Directories should be processed after their files.
             }
 
     let private rename pathItem =
