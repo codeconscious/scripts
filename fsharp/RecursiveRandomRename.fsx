@@ -129,7 +129,7 @@ module Renaming =
                 Directory.Move(oldName, newPath)
                 Renamed $"Directory \"{oldName}\" → \"{newName}\""
             with
-                | :? FileNotFoundException -> Failed $"Directory \"{oldName}\" was not found."
+                | :? DirectoryNotFoundException -> Failed $"Directory \"{oldName}\" was not found."
                 | e -> Failed $"Failure renaming directory \"{oldName}\": {e.Message}"
 
         match path with
