@@ -25,7 +25,7 @@ module ArgValidation =
 
     let validate =
         match rawArgs with
-        | t when t.Length = 0 -> Error "No file or directory path was passed."
+        | t when t.Length = 0 -> Error "No file or directory path was passed. Enter a single file or directory path."
         | t when t.Length > 1 -> Error "Too many arguments were passed. Enter a single file or directory path."
         | t ->
             let arg = t.Head
@@ -75,7 +75,7 @@ module Renaming =
         if oldName.IsNormalized normalizationForm
         then Ignored oldName
         else
-            let newName = oldName.Normalize(normalizationForm)
+            let newName = oldName.Normalize normalizationForm
             if oldName.Equals(newName, StringComparison.InvariantCulture)
             then Ignored oldName
             else
@@ -108,7 +108,7 @@ module Printing =
         let fileTense i = if i = 1 then "file" else "files"
         let formatNumber (i: int) = i.ToString("N0")
 
-        // Print the names of the paths with errors.
+        // Print the names of the paths with rename errors.
         failed |> Array.iter (fun f -> $"[Error] {f}" |> printColor (Some ConsoleColor.Red))
 
         printColor None $"Processed {formatNumber total} {fileTense total} in {watch.ElapsedFriendly}."
