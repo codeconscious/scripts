@@ -100,21 +100,23 @@ module Printing =
             Console.ResetColor()
 
     let summarize (watch: Startwatch) (results: RenameResult array) =
-        let total = results.Length
+        // Print the names of the paths with rename errors.
+        let failed = results |> Array.filter _.IsFailed
+        failed |> Array.iter (fun f -> $"[Error] {f}" |> printColor (Some ConsoleColor.Red))
+
+        let totalCount = results.Length
         let renamedCount = results |> Array.filter _.IsRenamed |> _.Length
         let ignoredCount = results |> Array.filter _.IsIgnored |> _.Length
-        let failed = results |> Array.filter _.IsFailed
         let failedCount = failed.Length
+
+        let failedColor = if failedCount = 0 then None else (Some ConsoleColor.Red)
         let fileTense i = if i = 1 then "file" else "files"
         let formatNumber (i: int) = i.ToString("N0")
 
-        // Print the names of the paths with rename errors.
-        failed |> Array.iter (fun f -> $"[Error] {f}" |> printColor (Some ConsoleColor.Red))
-
-        printColor None $"Processed {formatNumber total} {fileTense total} in {watch.ElapsedFriendly}."
+        // Print the final summary with counts.
+        printColor None $"Processed {formatNumber totalCount} {fileTense totalCount} in {watch.ElapsedFriendly}."
         printColor None $"• Renamed: {formatNumber renamedCount}"
         printColor None $"• Ignored: {formatNumber ignoredCount}"
-        let failedColor = if failedCount > 0 then (Some ConsoleColor.Red) else None
         printColor failedColor $"• Failed:  {formatNumber failedCount}"
 
 open ArgValidation
