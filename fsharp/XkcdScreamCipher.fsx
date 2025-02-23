@@ -30,26 +30,30 @@ module ArgValidation =
 
     let private result = ResultBuilder()
 
-    let private validateArgCount (args: string array) =
-        match args.Length with
-        | 0 -> Error "No arguments were passed. You must pass (1) an operation flag and (2) at least one input string."
-        | 1 -> Error "Not enough arguments were passed. You must pass (1) an operation flag and (2) at least one input string."
-        | _ -> Ok args
-
-    let private validateFlag flag =
-        // Abbreviated versions are currently unsupported due to an obscure .NET bug involving "-d".
-        // (See https://github.com/dotnet/fsharp/issues/10819 for more.)
-        let supportedFlags = Map.ofList [
+    // Abbreviated versions are currently unsupported due to an obscure .NET bug involving "-d".
+    // (See https://github.com/dotnet/fsharp/issues/10819 for more.)
+    let supportedFlags = Map.ofList [
             "--encode", Encode
             "--decode", Decode
             "--test",   Test
         ]
 
+    let private validateArgCount (args: string array) =
+        let instructions =
+            let flagSummary = String.Join(", ", supportedFlags.Keys)
+            $"Supply an operation flag and at least one string to convert.\nSupported flags: {flagSummary}"
+
+        match args.Length with
+        | 0 -> Error $"No arguments were passed. {instructions}"
+        | 1 -> Error $"Not enough arguments were passed. {instructions}"
+        | _ -> Ok args
+
+    let private validateFlag flag =
         if supportedFlags.ContainsKey flag
         then Ok supportedFlags[flag]
         else
-            let supportedFlagSummary = String.Join(", ", supportedFlags.Keys)
-            Error $"Unsupported flag \"%s{flag}\". You must use one of the following: {supportedFlagSummary}."
+            let flagSummary = String.Join(", ", supportedFlags.Keys)
+            Error $"Unsupported flag \"%s{flag}\". You must use one of the following: {flagSummary}."
 
     let private validateInputs (inputs: string array) =
         let allToUpper (inputs: string array) =
@@ -88,7 +92,6 @@ module Encoding =
             | false, _ -> asStr
 
         unencodedText
-        |> _.ToUpperInvariant()
         |> Seq.map convert
         |> fun x -> x |> String.concat String.Empty
 
