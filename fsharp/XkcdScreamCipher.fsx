@@ -26,9 +26,15 @@ module ArgValidation =
             Ok x
 
     type Operation = Encode | Decode | Test
-    type ValidatedArgs = { Operation: Operation; Inputs: string list }
+    type ValidatedArgs = { Operation: Operation; Inputs: string array }
 
     let private result = ResultBuilder()
+
+    let private validateArgCount (args: string array) =
+        match args.Length with
+        | 0 -> Error "No arguments were passed. You must pass (1) an operation flag and (2) at least one input string."
+        | 1 -> Error "Not enough arguments were passed. You must pass (1) an operation flag and (2) at least one input string."
+        | _ -> Ok args
 
     let private validateFlag flag =
         // Abbreviated versions are currently unsupported due to an obscure .NET half-bug involving "-d".
@@ -45,17 +51,18 @@ module ArgValidation =
             let supportedFlagSummary = String.Join(", ", supportedFlags.Keys)
             Error $"Unsupported flag \"%s{flag}\". You must use one of the following: {supportedFlagSummary}."
 
-    let private validateInputs (inputs: string list) =
+    let private validateInputs (inputs: string array) =
         if inputs.Length = 0
         then Error "No inputs to convert were passed."
         else Ok inputs
 
-    let validate rawArgs =
+    let validate (rawArgs: string array) =
         result {
-            let args = rawArgs |> Array.toList |> List.tail
-            let! operation = validateFlag args.Head // The head contains the script filename.
-            let! inputs = validateInputs args.Tail
-            return { Operation = operation; Inputs = inputs }
+            let! args = validateArgCount rawArgs[1..] // The head contains the script filename.
+            let flag, inputs = args[0], args[1..]
+            let! operation = validateFlag flag
+            let! inputs' = validateInputs inputs
+            return { Operation = operation; Inputs = inputs' }
         }
 
 module Encoding =
@@ -163,6 +170,6 @@ match validate fsi.CommandLineArgs with
         | Test -> test
 
     args.Inputs
-    |> List.map operation
-    |> List.iter printLine
+    |> Array.map operation
+    |> Array.iter printLine
     0
