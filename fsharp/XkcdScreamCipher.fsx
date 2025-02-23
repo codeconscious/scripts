@@ -37,7 +37,7 @@ module ArgValidation =
         | _ -> Ok args
 
     let private validateFlag flag =
-        // Abbreviated versions are currently unsupported due to an obscure .NET half-bug involving "-d".
+        // Abbreviated versions are currently unsupported due to an obscure .NET bug involving "-d".
         // (See https://github.com/dotnet/fsharp/issues/10819 for more.)
         let supportedFlags = Map.ofList [
             "--encode", Encode
@@ -89,40 +89,44 @@ module Encoding =
         |> fun x -> x |> String.concat String.Empty
 
     let decode (encodedText: string) =
-        // For detecting some additional characters that might be used instead of the expected ones.
-        let extraDecodingPairs = [
-            ("A̸", "Z")
-            ("A̅", "T")
-            ("Ȧ", "B")
-            ("Á", "E")
-            ("Ả", "I")
-            ("Ạ", "K")
-            ("Ă", "L")
-            ("Ǎ", "M")
-            ("Â", "N")
-            ("Å", "O")
-            ("Ȃ", "R")
-            ("Ã", "S")
-            ("Ā", "T")
-            ("Ä", "U")
-            ("À", "V")
-            ("Ȁ", "W")
-            ("A̱", "D")
-            ("A̲", "D")
-        ]
-
         let decodingMap =
-            let reversedEncodingPairs = encodingPairs |> List.map (fun (x, y) -> y, x)
-            Map.ofList <| reversedEncodingPairs @ extraDecodingPairs
+            // For detecting some additional characters that might be used instead of the expected ones.
+            let extraDecodingPairs = [
+                "A̸", "Z"
+                "A̅", "T"
+                "Ȧ", "B"
+                "Á", "E"
+                "Ả", "I"
+                "Ạ", "K"
+                "Ă", "L"
+                "Ǎ", "M"
+                "Â", "N"
+                "Å", "O"
+                "Ȃ", "R"
+                "Ã", "S"
+                "Ā", "T"
+                "Ä", "U"
+                "À", "V"
+                "Ȁ", "W"
+                "A̱", "D"
+                "A̲", "D"
+            ]
+
+            encodingPairs
+            |> List.map (fun (x, y) -> y, x)
+            |> List.append extraDecodingPairs
+            |> Map.ofList
+
+        let convert text =
+            match decodingMap.TryGetValue text with
+            | true, found -> found
+            | false, _ -> text
 
         let stringInfo = StringInfo encodedText
 
         [| 0 .. stringInfo.LengthInTextElements - 1 |]
         |> Array.map (fun i -> stringInfo.SubstringByTextElements(i, 1))
-        |> Array.map (fun substring ->
-            match decodingMap.TryGetValue substring with
-            | true, found -> found
-            | false, _ -> substring)
+        |> Array.map convert
         |> String.Concat
 
     // Confirms that provided input is correctly encoded and decoded to its original value.
