@@ -52,9 +52,13 @@ module ArgValidation =
             Error $"Unsupported flag \"%s{flag}\". You must use one of the following: {supportedFlagSummary}."
 
     let private validateInputs (inputs: string array) =
+        let allToUpper (inputs: string array) =
+            inputs
+            |> Array.map (fun x -> x.ToUpperInvariant())
+
         if inputs.Length = 0
         then Error "No inputs to convert were passed."
-        else Ok inputs
+        else Ok (inputs |> allToUpper)
 
     let validate (rawArgs: string array) =
         result {
