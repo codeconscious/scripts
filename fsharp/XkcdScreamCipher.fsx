@@ -81,7 +81,7 @@ module Encoding =
     let encode (unencodedText: string) =
         let encodingMap = encodingPairs |> Map.ofList
 
-        let convert (ch: char) =
+        let convert ch =
             let asStr = ch.ToString()
             match encodingMap.TryGetValue asStr with
             | true, found -> found
@@ -117,7 +117,7 @@ module Encoding =
             ]
 
             encodingPairs
-            |> List.map (fun (x, y) -> y, x)
+            |> List.map (fun (x, y) -> y, x) // Flip the pairs.
             |> List.append extraDecodingPairs
             |> Map.ofList
 
@@ -135,7 +135,7 @@ module Encoding =
 
     // Confirms that provided input is correctly encoded and decoded to its original value.
     // The check is case-insensitive.
-    let test (unencodedText: string) =
+    let test unencodedText =
         let encodedText = encode unencodedText
         let decodedText = decode encodedText
         let result =
