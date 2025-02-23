@@ -1,14 +1,15 @@
 (* F# implementation of xkcd's Scream Cipher
    • Replaces all letters in strings with A's containing various diacritics (e.g., "A̋", "A̧", "A̤").
-   • Decodes such strings to restore encoded letters.
-   • Non-supported characters (digits, punctuation, etc.) are not converted.
-   • Multiple strings can be passed.
+   • Decodes such strings, returning them back to their original letters.
+   • Non-supported characters (digits, punctuation, etc.) are not converted as used as-is.
+   • Multiple strings can be passed at once.
    • Requirement: .NET 9 runtime
+   • Usage: dotnet fsi XkcdScreamCipher.fsx [--encode|--decode|--test] input optionalInput
 
    References and thanks:
    • Source comic for the cipher: https://xkcd.com/3054/
    • Special thanks to FrostBird347 on GitHub, whose own JavaScript implementation
-     saved me considerable time gathering the necessary variants of the letter "A"!
+     saved me considerable time gathering the necessary variants of the letter "A".
      (Source: https://gist.github.com/FrostBird347/e7c017d096b3b50a75f5dcd5b4d08b99)
 *)
 
@@ -30,7 +31,7 @@ module ArgValidation =
 
     let private result = ResultBuilder()
 
-    // Abbreviated versions are currently unsupported due to an obscure .NET bug involving "-d".
+    // Abbreviated versions are currently unsupported due to an obscure bug involving "-d".
     // (See https://github.com/dotnet/fsharp/issues/10819 for more.)
     let supportedFlags = Map.ofList [
             "--encode", Encode
@@ -40,8 +41,9 @@ module ArgValidation =
 
     let private validateArgCount (args: string array) =
         let instructions =
-            let flagSummary = String.Join(", ", supportedFlags.Keys)
-            $"Supply an operation flag and at least one string to convert.\nSupported flags: {flagSummary}"
+            sprintf
+                "Supply an operation flag and at least one string to convert.\nSupported flags: %s"
+                (String.Join(", ", supportedFlags.Keys))
 
         match args.Length with
         | 0 -> Error $"No arguments were passed. {instructions}"
@@ -83,10 +85,10 @@ module Encoding =
         ]
 
     let encode (unencodedText: string) =
-        let encodingMap = encodingPairs |> Map.ofList
-
         let convert ch =
             let asStr = ch.ToString()
+            let encodingMap = encodingPairs |> Map.ofList
+
             match encodingMap.TryGetValue asStr with
             | true, found -> found
             | false, _ -> asStr
@@ -137,7 +139,6 @@ module Encoding =
         |> String.Concat
 
     // Confirms that provided input is correctly encoded and decoded to its original value.
-    // The check is case-insensitive.
     let test unencodedText =
         let encodedText = encode unencodedText
         let decodedText = decode encodedText
