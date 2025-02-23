@@ -43,7 +43,7 @@ module ArgValidation =
         then Ok supportedFlags[flag]
         else
             let supportedFlagSummary = String.Join(", ", supportedFlags.Keys)
-            Error $"Unsupported flag \"%s{flag}\". You must use one of the following: {supportedFlagSummary}"
+            Error $"Unsupported flag \"%s{flag}\". You must use one of the following: {supportedFlagSummary}."
 
     let private validateInputs (inputs: string list) =
         if inputs.Length = 0
@@ -130,12 +130,30 @@ module Encoding =
 
         $"{result}: {unencodedText} --> {encodedText} --> {decodedText}"
 
+module Printing =
+    // Be careful using color because we don't know the user's terminal color scheme,
+    // so it's possible to output text that is invisible to them or otherwise hard to read.
+    let private printLineColor color msg =
+        match color with
+        | Some c ->
+            Console.ForegroundColor <- c
+            printfn $"%s{msg}"
+            Console.ResetColor()
+        | None -> printfn $"%s{msg}"
+
+    let printLine msg =
+        printLineColor None msg
+
+    let printError msg =
+        printLineColor (Some ConsoleColor.Red) msg
+
 open ArgValidation
 open Encoding
+open Printing
 
 match validate fsi.CommandLineArgs with
 | Error e ->
-    printfn $"Error: %s{e}"
+    printError $"Error: %s{e}"
     1
 | Ok args ->
     let operation =
@@ -144,9 +162,7 @@ match validate fsi.CommandLineArgs with
         | Decode -> decode
         | Test -> test
 
-    let print x = printfn "%s" x
-
     args.Inputs
     |> List.map operation
-    |> List.iter print
+    |> List.iter printLine
     0
