@@ -141,30 +141,12 @@ module Encoding =
 
         $"{result}: {unencodedText} --> {encodedText} --> {decodedText}"
 
-module Printing =
-    // Be careful using color because we don't know the user's terminal color scheme,
-    // so it's possible to output text that is invisible to them or otherwise hard to read.
-    let private printLineColor color msg =
-        match color with
-        | Some c ->
-            Console.ForegroundColor <- c
-            printfn $"%s{msg}"
-            Console.ResetColor()
-        | None -> printfn $"%s{msg}"
-
-    let printLine msg =
-        printLineColor None msg
-
-    let printError msg =
-        printLineColor (Some ConsoleColor.Red) msg
-
 open ArgValidation
 open Encoding
-open Printing
 
 match validate fsi.CommandLineArgs with
 | Error e ->
-    printError $"Error: %s{e}"
+    printfn $"Error: %s{e}"
     1
 | Ok args ->
     let operation =
@@ -175,5 +157,5 @@ match validate fsi.CommandLineArgs with
 
     args.Inputs
     |> Array.map operation
-    |> Array.iter printLine
+    |> Array.iter (fun text -> printfn $"%s{text}")
     0
