@@ -13,25 +13,18 @@
      (Source: https://gist.github.com/FrostBird347/e7c017d096b3b50a75f5dcd5b4d08b99)
 *)
 
+#r "nuget: FsToolkit.ErrorHandling"
+
 open System
 open System.Globalization
+open FsToolkit.ErrorHandling
 
 module ArgValidation =
-    type private ResultBuilder() =
-        member this.Bind(m, f) =
-            match m with
-            | Error e -> Error e
-            | Ok a -> f a
-
-        member this.Return(x) =
-            Ok x
 
     type Operation = Encode | Decode | Test
     type ValidatedArgs = { Operation: Operation; Inputs: string array }
 
-    let private result = ResultBuilder()
-
-    // Abbreviated versions are currently unsupported due to an obscure bug involving "-d".
+    // Abbreviated flags are currently unsupported due to an obscure bug involving "-d".
     // (See https://github.com/dotnet/fsharp/issues/10819 for more.)
     let supportedFlags = Map.ofList [
             "--encode", Encode
@@ -95,7 +88,7 @@ module Encoding =
 
         unencodedText
         |> Seq.map convert
-        |> fun x -> x |> String.concat String.Empty
+        |> String.concat String.Empty
 
     let decode (encodedText: string) =
         let decodingMap =
