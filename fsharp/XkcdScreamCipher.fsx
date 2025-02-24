@@ -1,15 +1,15 @@
-(* F# implementation of xkcd's Scream Cipher
+(* F# IMPLEMENTATION OF XKCD'S SCREAM CIPHER (as seen at https://xkcd.com/3054/)
    • Replaces all letters in strings with A's containing various diacritics (e.g., "A̋", "A̧", "A̤").
    • Decodes such strings, returning them back to their original letters.
-   • Non-supported characters (digits, punctuation, etc.) are not converted as used as-is.
+   • Non-supported characters (digits, punctuation, etc.) are not converted and are used as-is.
    • Multiple strings can be passed at once.
    • Requirement: .NET 9 runtime
-   • Usage: dotnet fsi XkcdScreamCipher.fsx [--encode|--decode|--test] input optionalInput
+   • Usage: dotnet fsi XkcdScreamCipher.fsx [--encode|--decode|--test] input [optionalInputs...]
 
    References and thanks:
-   • Source comic for the cipher: https://xkcd.com/3054/
-   • Special thanks to FrostBird347 on GitHub, whose own JavaScript implementation
-     saved me considerable time gathering the necessary variants of the letter "A".
+   • My blog post about this: https://codeconscious.github.io/2025/02/23/xkcd-scream-cipher.html
+   • Special thanks to FrostBird347 on GitHub, whose JavaScript implementation saved
+     considerable time adn trouble gathering the necessary variants of `A`.
      (Source: https://gist.github.com/FrostBird347/e7c017d096b3b50a75f5dcd5b4d08b99)
 *)
 
