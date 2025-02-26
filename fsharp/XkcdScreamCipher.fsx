@@ -20,7 +20,6 @@ open System.Globalization
 open FsToolkit.ErrorHandling
 
 module ArgValidation =
-
     type Operation = Encode | Decode | Test
     type ValidatedArgs = { Operation: Operation; Inputs: string array }
 
@@ -115,7 +114,7 @@ module Encoding =
             ]
 
             encodingPairs
-            |> List.map (fun (x, y) -> y, x) // Flip the pairs.
+            |> List.map (fun (x, y) -> y, x) // Ensure encoded chars are first.
             |> List.append extraDecodingPairs
             |> Map.ofList
 
