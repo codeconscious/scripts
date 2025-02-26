@@ -145,9 +145,6 @@ open ArgValidation
 open Encoding
 
 match validate fsi.CommandLineArgs with
-| Error e ->
-    printfn $"Error: %s{e}"
-    1
 | Ok args ->
     let operation =
         match args.Operation with
@@ -159,3 +156,6 @@ match validate fsi.CommandLineArgs with
     |> Array.map operation
     |> Array.iter (fun text -> printfn $"%s{text}")
     0
+| Error e ->
+    printfn $"Error: %s{e}"
+    1
