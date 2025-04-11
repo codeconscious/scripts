@@ -9,7 +9,7 @@
    References and thanks:
    • My blog post about this: https://codeconscious.github.io/2025/02/23/xkcd-scream-cipher.html
    • Special thanks to FrostBird347 on GitHub, whose JavaScript implementation saved
-     considerable time adn trouble gathering the necessary variants of `A`.
+     considerable time and trouble gathering the necessary variants of `A`.
      (Source: https://gist.github.com/FrostBird347/e7c017d096b3b50a75f5dcd5b4d08b99)
 *)
 
