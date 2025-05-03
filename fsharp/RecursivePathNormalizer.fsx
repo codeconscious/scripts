@@ -34,6 +34,7 @@ module ArgValidation =
             else Error $"Path \"{arg}\" was not found."
 
 module Renaming =
+    open System.Text
     type RenameResult =
         | Renamed of string
         | Ignored of string
@@ -69,19 +70,32 @@ module Renaming =
                 | :? DirectoryNotFoundException -> Failed $"Directory \"{oldName}\" was not found."
                 | e -> Failed $"Could not rename directory \"{oldName}\": {e.Message}"
 
-        let oldName = match pathItem with File f -> f | Directory d -> d
-        let normalizationForm = Text.NormalizationForm.FormC
+        let identicalByteForByte (s1: string) (s2: string) =
+            let bytes1 = Encoding.UTF8.GetBytes s1
+            let bytes2 = Encoding.UTF8.GetBytes s2
 
-        if oldName.IsNormalized normalizationForm
-        then Ignored oldName
-        else
-            let newName = oldName.Normalize normalizationForm
-            if oldName.Equals(newName, StringComparison.InvariantCulture)
-            then Ignored oldName
+            if bytes1.Length <> bytes2.Length then
+                false
             else
-                match pathItem with
-                | File f -> renameFile f newName
-                | Directory d -> renameDir d newName
+                Array.forall2 (=) bytes1 bytes2
+
+        let fullPath = match pathItem with File f -> f | Directory d -> d
+        let parentDir = Directory.GetParent(fullPath).FullName
+
+        let oldItemName =
+            match pathItem with
+            | File f -> Path.GetFileName f
+            | Directory d -> Path.GetDirectoryName d
+
+        let newItemName = oldItemName.Normalize NormalizationForm.FormC
+
+        if identicalByteForByte oldItemName newItemName
+        then Ignored oldItemName
+        else
+            let newPath = Path.Combine(parentDir, newItemName)
+            match pathItem with
+            | File f -> renameFile f newPath
+            | Directory d -> renameDir d newPath
 
     let renameAll path =
         path
