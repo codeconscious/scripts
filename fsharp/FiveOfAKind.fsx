@@ -9,7 +9,11 @@ type DieValue =
 
 let dieValues = [| 1..6 |]
 
-type RolledDice = int array
+type RolledDice = {
+    Dice: int array
+    Counts: Map<int, int>
+    Sum: int
+}
 
 let rnd = System.Random()
 
@@ -49,30 +53,27 @@ module Rules =
         | BigStraight = 40
         | FiveOfAKind = 50
 
-    let countNumbers (values: int array) =
-        values |> Array.countBy id |> Map.ofArray
+    let chance (rolledDice: RolledDice) = rolledDice.Sum
 
-    let chance (xs: int array) = xs |> Array.sum
-
-    let threeOfAKind (rolledDice: int array) (counts: Map<int, int>) =
-        counts
+    let threeOfAKind (rolledDice: RolledDice) =
+        rolledDice.Counts
         |> Map.filter (fun _ y -> y >= 3)
         |> fun x ->
             if x.Count = 1
-            then rolledDice |> Array.sum
+            then rolledDice.Sum
             else int FixedScores.Zero
 
-    let fourOfAKind (rolledDice: int array) (counts: Map<int, int>) =
-        counts
+    let fourOfAKind (rolledDice: RolledDice) =
+        rolledDice.Counts
         |> Map.filter (fun _ y -> y >= 4)
         |> fun x ->
             if x.Count = 1
-            then rolledDice |> Array.sum
+            then rolledDice.Sum
             else int FixedScores.Zero
 
-    let fullHouse (map: Map<int, int>) =
-        map
-        |> Map.filter (fun _ count -> count > 2)
+    let fullHouse (rolledDice: RolledDice) =
+        rolledDice.Counts
+        |> Map.filter (fun _ count -> count > 2 && count < 5) // Five-of-a-kind is excluded.
         |> Map.values
         |> Seq.sum
         |> fun sum ->
@@ -86,13 +87,13 @@ module Rules =
         |> Array.pairwise
         |> Array.forall (fun (a, b) -> b = a + 1)
 
-    let smallStraight (xs: Map<int, int>) =
-        let anyValueAppearsAtLeast3Times = xs |> Map.values |> Seq.exists (fun i -> i >= 3)
+    let smallStraight (rolledDice: RolledDice)=
+        let anyValueAppearsAtLeast3Times = rolledDice.Counts |> Map.values |> Seq.exists (fun i -> i >= 3)
         let score =
             if anyValueAppearsAtLeast3Times
             then FixedScores.Zero
             else
-                let sortedValues = xs |> Map.keys |> Array.ofSeq |> Array.sort
+                let sortedValues = rolledDice.Counts |> Map.keys |> Array.ofSeq |> Array.sort
                 let group1 = sortedValues[..3]
                 let group2 = sortedValues[1..]
                 if isConsecutive group1 || isConsecutive group2
@@ -100,33 +101,38 @@ module Rules =
                 else FixedScores.Zero
         int score
 
-    let bigStraight (xs: int array) =
-        if xs |> Array.sort |> isConsecutive
+    let bigStraight (rolledDice: RolledDice)=
+        if rolledDice.Dice |> Array.sort |> isConsecutive
         then FixedScores.BigStraight
         else FixedScores.Zero
         |> int
 
-    let fiveOfAKind (xs: int array) =
-        xs
+    let fiveOfAKind (rolledDice: RolledDice)=
+        rolledDice.Dice
         |> Array.tail
-        |> Array.forall ((=) xs[0])
+        |> Array.forall ((=) rolledDice.Dice[0])
         |> fun result ->
-            if result = true
+            if result
             then FixedScores.FiveOfAKind
             else FixedScores.Zero
         |> int
 
 open Rules
 
-let rolledDice = [| 6;6;6;6;5 |] // rollDice()
-printfn "%A" rolledDice
+let rolledDice =
+    rollDice()
+    |> fun x -> {
+        Dice = x
+        Counts = x |> Array.countBy id |> Map.ofArray
+        Sum = Array.sum x
+    }
 
-let countsMap = countNumbers rolledDice
+printfn "%A" rolledDice
 
 let scoreFor x =
     let x' = int x
-    match Map.containsKey x' countsMap with
-    | true -> x' * countsMap[x']
+    match Map.containsKey x' rolledDice.Counts with
+    | true -> x' * rolledDice.Counts[x']
     | false -> int FixedScores.Zero
 
 let results =
@@ -138,10 +144,10 @@ let results =
         Fives = scoreFor DieValue.Five
         Sixes = scoreFor DieValue.Six
         Chance = chance rolledDice
-        ThreeOfAKind = threeOfAKind rolledDice countsMap
-        FourOfAKind = fourOfAKind rolledDice countsMap
-        FullHouse = fullHouse countsMap
-        SmallStraight = smallStraight countsMap
+        ThreeOfAKind = threeOfAKind rolledDice
+        FourOfAKind = fourOfAKind rolledDice
+        FullHouse = fullHouse rolledDice
+        SmallStraight = smallStraight rolledDice
         BigStraight = bigStraight rolledDice
         FiveOfAKind = fiveOfAKind rolledDice
     }
