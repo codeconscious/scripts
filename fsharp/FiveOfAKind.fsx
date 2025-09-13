@@ -53,11 +53,17 @@ module Rules =
         | BigStraight = 40
         | FiveOfAKind = 50
 
-    let chance (rolledDice: RolledDice) = rolledDice.Sum
+    let private isConsecutive (numbers: int array) =
+        numbers
+        |> Array.pairwise
+        |> Array.forall (fun (x, y) -> x + 1 = y)
+
+    let chance (rolledDice: RolledDice) =
+        rolledDice.Sum
 
     let threeOfAKind (rolledDice: RolledDice) =
         rolledDice.Counts
-        |> Map.filter (fun _ y -> y >= 3)
+        |> Map.filter (fun _ counts -> counts >= 3)
         |> fun x ->
             if x.Count = 1
             then rolledDice.Sum
@@ -65,7 +71,7 @@ module Rules =
 
     let fourOfAKind (rolledDice: RolledDice) =
         rolledDice.Counts
-        |> Map.filter (fun _ y -> y >= 4)
+        |> Map.filter (fun _ counts -> counts >= 4)
         |> fun x ->
             if x.Count = 1
             then rolledDice.Sum
@@ -73,7 +79,7 @@ module Rules =
 
     let fullHouse (rolledDice: RolledDice) =
         rolledDice.Counts
-        |> Map.filter (fun _ count -> count > 2 && count < 5) // Five-of-a-kind is excluded.
+        |> Map.filter (fun _ counts -> counts > 2 && counts < 5) // Five-of-a-kind is excluded.
         |> Map.values
         |> Seq.sum
         |> fun sum ->
@@ -82,18 +88,16 @@ module Rules =
             else FixedScores.Zero
             |> int
 
-    let private isConsecutive (is: int array) =
-        is
-        |> Array.pairwise
-        |> Array.forall (fun (a, b) -> b = a + 1)
-
-    let smallStraight (rolledDice: RolledDice)=
-        let anyValueAppearsAtLeast3Times = rolledDice.Counts |> Map.values |> Seq.exists (fun i -> i >= 3)
+    let smallStraight (rolledDice: RolledDice) =
+        let hasValueAppearingAtLeast3Times =
+            rolledDice.Counts
+            |> Map.values
+            |> Seq.exists (fun i -> i >= 3)
         let score =
-            if anyValueAppearsAtLeast3Times
+            if hasValueAppearingAtLeast3Times
             then FixedScores.Zero
             else
-                let sortedValues = rolledDice.Counts |> Map.keys |> Array.ofSeq |> Array.sort
+                let sortedValues = Array.sort rolledDice.Dice
                 let group1 = sortedValues[..3]
                 let group2 = sortedValues[1..]
                 if isConsecutive group1 || isConsecutive group2
