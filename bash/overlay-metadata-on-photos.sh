@@ -41,7 +41,7 @@ output_photo="${input_image}_annotated.jpg"
 
 magick "$input_image" \
     -bordercolor white \
-    -border 40 \
+    -border 40x80 \
     -gravity South \
     -font KozMinPro \
     -font KozMinPro-Medium \
@@ -51,12 +51,12 @@ magick "$input_image" \
     -font "Source-Han-Sans-JP" \
     -font "Hiragino-Sans-GB" \
     -font "/Library/Fonts/Arial Unicode.ttf" \
-    -pointsize 85 \
+    -pointsize 55 \
     -fill black \
     -gravity Northwest \
-    -annotate +10+10 "$title" \
+    -annotate +40+4 "$title" \
     -gravity Northeast \
-    -annotate +10+10 "$datetime" \
+    -annotate +40+4 "$datetime" \
     -gravity South \
     -annotate +0+10 "$description" \
     "$output_photo"
