@@ -4,9 +4,13 @@ echo "▲ $input_image"
 
 image_base_filename=$(basename -s .jpg "$input_image")
 dir_name=$(dirname "$input_image")
-parent_dir_name=$(dirname "$dir_name")
 
-xmp_file="${parent_dir_name}/${image_base_filename}.ORF.xmp"
+# Camera
+# parent_dir_name=$(dirname "$dir_name")
+# xmp_file="${parent_dir_name}/${image_base_filename}.ORF.xmp"
+
+# Smartphone
+xmp_file="${dir_name}/${image_base_filename}.jpg.xmp"
 
 # Exit if no sidecar file found
 if [[ ! -f "$xmp_file" ]]; then
