@@ -118,7 +118,7 @@ let rolledDice =
           Counts = x |> Array.countBy id |> Map.ofArray
           Sum = Array.sum x }
 
-printfn "%A" rolledDice
+printfn "%A" rolledDice.Dice
 
 let scoreFor x =
     match Map.containsKey x rolledDice.Counts with
