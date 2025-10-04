@@ -1,11 +1,7 @@
 (* Simple game logic modeling practice one Sunday morning. *)
-type DieValue =
-    | One = 1
-    | Two = 2
-    | Three = 3
-    | Four = 4
-    | Five = 5
-    | Six = 6
+
+[<Literal>]
+let diceCount = 5
 
 let dieValues = [| 1..6 |]
 
@@ -18,15 +14,7 @@ type RolledDice = {
 let rnd = System.Random()
 
 let rollDice () =
-    Array.init 5 (fun _ -> dieValues[rnd.Next dieValues.Length])
-
-// type Roll private (array: int[]) =
-//     static member Create(a: int, b: int, c: int, d: int, e: int) =
-//         let values = [| a; b; c; d; e |]
-//         if values.Length = 5 then
-//             Roll values
-//         else
-//             failwith "Must have exactly 5 integers"
+    Array.init diceCount (fun _ -> dieValues[rnd.Next dieValues.Length])
 
 type RollScore =
     {
@@ -53,7 +41,7 @@ module Rules =
         | BigStraight = 40
         | FiveOfAKind = 50
 
-    let private isConsecutive (numbers: int array) =
+    let private isConsecutive numbers =
         numbers
         |> Array.pairwise
         |> Array.forall (fun (x, y) -> x + 1 = y)
@@ -133,19 +121,18 @@ let rolledDice =
 printfn "%A" rolledDice
 
 let scoreFor x =
-    let x' = int x
-    match Map.containsKey x' rolledDice.Counts with
-    | true -> x' * rolledDice.Counts[x']
+    match Map.containsKey x rolledDice.Counts with
+    | true -> x * rolledDice.Counts[x]
     | false -> int FixedScores.Zero
 
 let results =
     {
-        Ones = scoreFor DieValue.One
-        Twos = scoreFor DieValue.Two
-        Threes = scoreFor DieValue.Three
-        Fours = scoreFor DieValue.Four
-        Fives = scoreFor DieValue.Five
-        Sixes = scoreFor DieValue.Six
+        Ones = scoreFor 1
+        Twos = scoreFor 2
+        Threes = scoreFor 3
+        Fours = scoreFor 4
+        Fives = scoreFor 5
+        Sixes = scoreFor 6
         Chance = chance rolledDice
         ThreeOfAKind = threeOfAKind rolledDice
         FourOfAKind = fourOfAKind rolledDice
