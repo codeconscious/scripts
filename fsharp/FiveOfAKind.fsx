@@ -113,12 +113,13 @@ open Rules
 
 let rolledDice =
     rollDice()
-    |> fun x ->
-        { Dice = x
-          Counts = x |> Array.countBy id |> Map.ofArray
-          Sum = Array.sum x }
-
-printfn "%A" rolledDice.Dice
+    |> fun dice ->
+        { Dice = dice
+          Counts =
+            dice
+            |> Array.countBy id
+            |> Map.ofArray
+          Sum = Array.sum dice }
 
 let scoreFor x =
     match Map.containsKey x rolledDice.Counts with
@@ -142,4 +143,5 @@ let results =
         FiveOfAKind = fiveOfAKind rolledDice
     }
 
+printfn "%A" rolledDice.Dice
 printfn "%A" results
