@@ -2,3 +2,15 @@
 
 # F# Ionide extension files
 .fake
+
+# OCAML
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+*.byte
