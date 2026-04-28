@@ -58,7 +58,7 @@ let entryGroups =
         let options = StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries
         text.Split(Environment.NewLine, options)
 
-    let splitLinesBy (lines: string[]) (separator:char) =
+    let splitLinesBy (lines: string array) (separator: char) =
         lines
         |> Array.map _.Split(separator, StringSplitOptions.TrimEntries)
 
@@ -108,9 +108,9 @@ let entryGroups =
         else entryDate <= today
 
     let sortGroupData (groups: string * Entry array) =
-         groups |>
-         (fun (k, e) -> k, e
-                        |> Array.sortBy _.Event.Date)
+         groups
+         |> fun (k, e) -> k, e
+                             |> Array.sortBy _.Event.Date
 
     match readFile fileName with
     | Error e -> Error e
