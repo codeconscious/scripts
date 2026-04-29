@@ -1,3 +1,10 @@
+#r "nuget: CCFSharpUtils"
+#r "nuget: FSharpPlus"
+
+open CCFSharpUtils
+open CCFSharpUtils.Text
+open FSharpPlus.Operators
+
 module Styles =
     let letters = [ 'a' .. 'z' ]
     let numbers = [ '0' .. '9' ]
@@ -195,50 +202,33 @@ module ArgValidation =
 
     type UserArgs = { Style: string; Text: string }
 
-    type ResultBuilder() =
-        member this.Bind(m, f) =
-            match m with
-            | Error e -> Error e
-            | Ok a -> f a
-
-        member this.Return(x) =
-            Ok x
-
-    let result = ResultBuilder()
-
-    let validate =
-        let supportedStyleNames =
-            String.Join(
-                Space,
-                styles |> List.map _.Name
-            )
+    let validateArgs =
+        let supportedStyleNames = String.Join(Space, styleNames)
 
         let rawArgs =
             fsi.CommandLineArgs
             |> Array.toList
             |> List.tail // The head contains the script filename.
 
-        let argCount (rawArgs:string list) =
+        let checkArgCount (rawArgs:string list) =
             let errorText =
                 String.Join(
-                    Environment.NewLine,
+                    String.nl,
                     ["Pass in (1) a style name and (2) a string containing only supported characters for that style.";
                     $"Supported styles: {supportedStyleNames}"]
                 )
 
             match rawArgs.Length with
             | l when l = 2 ->
-                Ok <|
-                {
-                    Style = rawArgs.Head.ToLowerInvariant();
-                    Text = rawArgs[1].ToLowerInvariant()
-                }
-            | _ -> Error errorText
+                Ok { Style = rawArgs.Head.ToLowerInvariant()
+                     Text = rawArgs[1].ToLowerInvariant() }
+            | _ ->
+                Error errorText
 
-        let styleName args =
+        let checkStyleName args =
             let errorText =
                 String.Join(
-                    Environment.NewLine,
+                    String.nl,
                     [$"Style \"{args.Style}\" not found.";
                     $"Supported styles: {supportedStyleNames}"]
                 )
@@ -247,12 +237,12 @@ module ArgValidation =
             | true -> Ok args
             | false -> Error errorText
 
-        let inputLength args =
+        let checkInputLength args =
             match args.Text.Length with
             | 0 -> Error "You must enter text to be converted."
             | _ -> Ok args
 
-        let inputChars args =
+        let checkInputChars args =
             let style =
                 styles
                 |> List.filter (fun s -> s.Name = args.Style)
@@ -269,33 +259,25 @@ module ArgValidation =
 
             let error style =
                 let supportedChars style =
-                    let chars =
-                        style.SupportedChars
-                        |> List.map ensureVisibleChar
+                    let chars = style.SupportedChars |> List.map ensureVisibleChar
                     String.Join(Space, chars)
 
                 String.Join(
-                    Environment.NewLine,
+                    String.nl,
                     [$"Invalid characters found for style \"{style.Name}\": {String.Join(Space, invalidChars)}";
-                    $"Supported characters: {style |> supportedChars}"]
+                     $"Supported characters: {style |> supportedChars}"]
                 )
 
-            if invalidChars.Length = 0
+            if Num.isZero invalidChars.Length
             then Ok args
-            else Error <| error style
+            else Error (error style)
 
-        result {
-            let! args = argCount rawArgs
-            let! args' = styleName args
-            let! args'' = inputLength args'
-            let! args''' = inputChars args''
-            return args'''
-        }
+        rawArgs |> checkArgCount >>= checkStyleName >>= checkInputLength >>= checkInputChars
 
 open ArgValidation
 open Styles
 
-let args = validate
+let args = validateArgs
 
 let getStyle args =
     styles
@@ -312,10 +294,5 @@ let convertText args style =
     |> String.concat System.String.Empty
 
 match args with
-| Error e ->
-    e |> eprintfn "%s"
-| Ok a ->
-    a
-    |> getStyle
-    |> convertText a
-    |> printfn "%s"
+| Error e -> eprintfn "%s" e
+| Ok a    -> a |> getStyle |> convertText a |> printfn "%s"
