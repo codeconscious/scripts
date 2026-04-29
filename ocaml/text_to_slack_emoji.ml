@@ -196,22 +196,22 @@ module ArgValidation = struct
       |> Array.to_list
       |> List.tl (* The head contains the script filename. *) in
 
-    let argCount (rawArgs:string list) =
+    let checkArgCount args =
       let errorText =
         String.concat
           "\n"
           ["Pass in (1) a style name and (2) a string containing only supported characters for that style.";
             Printf.sprintf "Supported styles: %s" supportedStyleNames] in
 
-      match List.length rawArgs with
+      match List.length args with
       | l when l = 2 ->
         Ok {
-          style = rawArgs |> List.hd |> String.lowercase_ascii;
-          text = List.nth rawArgs 1 |> String.lowercase_ascii
+          style = args |> List.hd |> String.lowercase_ascii;
+          text = List.nth args 1 |> String.lowercase_ascii
         }
       | _ -> Error errorText in
 
-    let styleName args =
+    let checkStyleName args =
       let errorText =
         String.concat
           "\n"
@@ -222,12 +222,12 @@ module ArgValidation = struct
       | true -> Ok args
       | false -> Error errorText in
 
-    let inputLength args =
+    let checkInputLength args =
       match String.length args.text with
       | 0 -> Error "You must enter text to be converted."
       | _ -> Ok args in
 
-    let inputChars args =
+    let checkInputChars args =
       let style =
         styles
         |> List.filter (fun s -> s.name = args.style)
@@ -258,10 +258,10 @@ module ArgValidation = struct
       else Error (error style) in
 
     let ( let* ) = Result.bind in
-    let* args = argCount rawArgs in
-    let* args' = styleName args in
-    let* args'' = inputLength args' in
-    let* args''' = inputChars args'' in
+    let* args = checkArgCount rawArgs in
+    let* args' = checkStyleName args in
+    let* args'' = checkInputLength args' in
+    let* args''' = checkInputChars args'' in
     Ok args'''
 end
 
