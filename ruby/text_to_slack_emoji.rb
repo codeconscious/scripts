@@ -139,6 +139,16 @@ SUPPORTED_CHARSETS =
           end
         end
       },
+    key:
+      {
+        chars: [*LETTERS, SPACE],
+        converter: lambda do |char|
+          case char
+          when SPACE then ':blank:'
+          else ":key#{char}:"
+          end
+        end
+      },
     custom:
       {
         chars: [*LETTERS, *NUMBERS, '?', '!', SPACE],
