@@ -1,6 +1,7 @@
 open Core
 
-let space : char = ' '
+let empty = ""
+let space = ' '
 
 module Styles = struct
   let letters = List.init 26 ~f:(fun i -> Char.of_int_exn (Char.to_int 'a' + i)) (* [ 'a' .. 'z' ] *)
@@ -275,7 +276,7 @@ let convert_text args style =
   text
   |> String.to_list
   |> List.map ~f:converter
-  |> fun lst -> String.concat ~sep:"" lst
+  |> fun lst -> String.concat ~sep:empty lst
 
 let () =
   match args with
