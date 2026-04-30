@@ -1,3 +1,5 @@
+(* open Core *)
+
 let (<|) f x = f x
 
 let space = ' '
@@ -205,11 +207,10 @@ module ArgValidation = struct
 
       match List.length args with
       | l when l = 2 ->
-        Ok {
-          style = args |> List.hd |> String.lowercase_ascii;
-          text = List.nth args 1 |> String.lowercase_ascii
-        }
-      | _ -> Error errorText in
+        Ok { style = args |> List.hd |> String.lowercase_ascii;
+             text = List.nth args 1 |> String.lowercase_ascii }
+      | _ ->
+        Error errorText in
 
     let checkStyleName args =
       let errorText =

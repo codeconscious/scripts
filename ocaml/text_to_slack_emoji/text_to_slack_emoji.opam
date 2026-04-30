@@ -2,17 +2,18 @@
 opam-version: "2.0"
 synopsis: "A short synopsis"
 description: "A longer description"
-maintainer: ["CodeConscious <hello@codeconscio.us>"]
-authors: ["CodeConscious <hello@codeconscio.us>"]
-license: "MIT"
-tags: ["slack" "emoji"]
-homepage: "https://github.com/codeconscious/scripts"
+maintainer: ["Maintainer Name <maintainer@example.com>"]
+authors: ["Author Name <author@example.com>"]
+license: "LICENSE"
+tags: ["add topics" "to describe" "your" "project"]
+homepage: "https://github.com/username/reponame"
 doc: "https://url/to/documentation"
-bug-reports: "https://github.com/codeconscious/scripts/issues"
+bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "dune" {>= "3.17"}
   "ocaml" {>= "4.14"}
   "base"
+  "core"
   "odoc" {with-doc}
 ]
 build: [
@@ -29,4 +30,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/codeconscious/scripts.git"
+dev-repo: "git+https://github.com/username/reponame.git"

@@ -1,4 +1,4 @@
 (executable
  (public_name text_to_slack_emoji)
  (name main)
- (libraries text_to_slack_emoji base))
+ (libraries text_to_slack_emoji base core))
