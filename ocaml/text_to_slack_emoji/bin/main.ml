@@ -1,12 +1,10 @@
-(* open Core *)
+open Core
 
-let (<|) f x = f x
-
-let space = ' '
+let space : char = ' '
 
 module Styles = struct
-  let letters = List.init 26 (fun i -> Char.chr (Char.code 'a' + i)) (* [ 'a' .. 'z' ] *)
-  let numbers = List.init 10 (fun i -> Char.chr (Char.code '0' + i))
+  let letters = List.init 26 ~f:(fun i -> Char.of_int_exn (Char.to_int 'a' + i)) (* [ 'a' .. 'z' ] *)
+  let numbers = List.init 10 ~f:(fun i -> Char.of_int_exn (Char.to_int '0' + i))
 
   type style = {
       name: string;
@@ -20,72 +18,72 @@ module Styles = struct
         supported_chars = letters @ [space; '!'; '?'; '&'; (* '•' *)];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           | '!' -> ":cookie-exclaim:"
           | '?' -> ":cookie-question:"
           | '&' -> ":cookie-and:"
           (* | '•' -> ":cookie-dot:" *)
-          | c -> Printf.sprintf ":cookie-{%c}:" c
+          | c -> Printf.sprintf ":cookie-%c:" c
       };
       { name = "bluebox";
         supported_chars = letters @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank: "
+          | c when Char.equal c space -> ":blank: "
           | 'o' -> ":alpha-0: "
-          | c -> Printf.sprintf ":alpha-{%c}:" c (* Hairspace *)
+          | c -> Printf.sprintf ":alpha-%c:" c (* Hairspace *)
       };
       { name = "alphawhite";
         supported_chars = letters @ [space; '!'; '?'; '#'; '@'];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           | '!' -> ":alphabet-white-exclamation:"
           | '?' -> ":alphabet-white-question:"
           | '#' -> ":alphabet-white-hash:"
           | '@' -> ":alphabet-white-at:"
-          | c -> Printf.sprintf ":alphabet-white-{%c}:" c
+          | c -> Printf.sprintf ":alphabet-white-%c:" c
       };
       { name = "alphayellow";
         supported_chars = letters @ [space; '!'; '?'; '#'; '@'; (* 'ñ' *)];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           | '!' -> ":alphabet-yellow-exclamation:"
           | '?' -> ":alphabet-yellow-question:"
           | '#' -> ":alphabet-yellow-hash:"
           | '@' -> ":alphabet-yellow-at:"
           (* | 'ñ' -> ":alphabet-yellow-nñ:" *)
-          | c -> Printf.sprintf ":alphabet-yellow-{%c}:" c
+          | c -> Printf.sprintf ":alphabet-yellow-%c:" c
       };
       { name = "alphasnow";
         supported_chars = letters @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           | 'i' -> ":alpha_snow_i2:"
-          | c -> Printf.sprintf ":alpha_snow_{%c}:" c
+          | c -> Printf.sprintf ":alpha_snow_%c:" c
       };
       { name = "tiles";
         supported_chars = letters @ [space; (* 'ñ' *)];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":letter_blank:"
+          | c when Char.equal c space -> ":letter_blank:"
           (* | 'ñ' -> ":letterñ:" *)
-          | c -> Printf.sprintf ":letter_{%c}:" c
+          | c -> Printf.sprintf ":letter_%c:" c
       };
       { name = "pokemon";
         supported_chars = letters @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
-          | c -> Printf.sprintf ":pokemonfont-{%c}:" c
+          | c when Char.equal c space -> ":blank:"
+          | c -> Printf.sprintf ":pokemonfont-%c:" c
       };
       { name = "merah";
         supported_chars = letters @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           (* The "merah" set is incomplete and inconsistently named. *)
           | 'b' -> ":merahbb:"
           | 'd' -> ":merahdd:"
@@ -101,20 +99,20 @@ module Styles = struct
           | 'x' -> ":alpha-x:"
           | 'y' -> ":merahhyyy:"
           | 'z' -> ":alpha-z:"
-          | c -> Printf.sprintf ":merah{%c}:" c
+          | c -> Printf.sprintf ":merah%c:" c
       };
       { name = "magazine";
         supported_chars = letters @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
-          | c -> Printf.sprintf ":magazine_{%c}:" c
+          | c when Char.equal c space -> ":blank:"
+          | c -> Printf.sprintf ":magazine_%c:" c
       };
       { name = "custom";
         supported_chars = letters @ numbers @ [space; '?'; '!'];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           | 'a' -> ":m-a:"
           | 'b' -> ":b4:"
           | 'c' -> ":c2:"
@@ -159,14 +157,14 @@ module Styles = struct
         supported_chars = numbers @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
-          | c -> Printf.sprintf ":num{%c}:" c
+          | c when Char.equal c space -> ":blank:"
+          | c -> Printf.sprintf ":num%c:" c
       };
       { name = "squarenumbers";
         supported_chars = numbers @ [space];
         converter = fun ch ->
           match ch with
-          | c when c = space -> ":blank:"
+          | c when Char.equal c space -> ":blank:"
           | '0' -> ":zero:"
           | '1' -> ":one:"
           | '2' -> ":two:"
@@ -180,46 +178,47 @@ module Styles = struct
       };
     ]
 
-  let styleNames = styles |> List.map (fun s -> s.name)
+  let styleNames = styles |> List.map ~f:(fun s -> s.name)
 end
 
 module ArgValidation = struct
-  (* open Result.Let_syntax *)
+  open Result.Let_syntax
+
   open Styles
 
   type user_args = { style: string; text: string }
 
   let validate =
     let supportedStyleNames =
-      String.concat " " (styles |> List.map (fun s -> s.name)) in
+      String.concat ~sep:" " (styles |> List.map ~f:(fun s -> s.name)) in
 
     let rawArgs =
-      Sys.argv
+      Sys.get_argv()
       |> Array.to_list
-      |> List.tl (* The head contains the script filename. *) in
+      |> List.tl_exn (* The head contains the script filename. *) in
 
     let checkArgCount args =
       let errorText =
         String.concat
-          "\n"
+          ~sep:"\n"
           ["Pass in (1) a style name and (2) a string containing only supported characters for that style.";
             Printf.sprintf "Supported styles: %s" supportedStyleNames] in
 
       match List.length args with
       | l when l = 2 ->
-        Ok { style = args |> List.hd |> String.lowercase_ascii;
-             text = List.nth args 1 |> String.lowercase_ascii }
+        Ok { style = args |> List.hd_exn |> String.lowercase;
+             text = List.nth_exn args 1 |> String.lowercase }
       | _ ->
         Error errorText in
 
     let checkStyleName args =
       let errorText =
         String.concat
-          "\n"
+          ~sep:"\n"
           [Printf.sprintf "Style \"%s\" not found." args.style;
            Printf.sprintf "Supported styles: %s" supportedStyleNames] in
 
-      match styleNames |> List.mem args.style with
+      match List.mem styleNames args.style ~equal:String.equal with
       | true -> Ok args
       | false -> Error errorText in
 
@@ -231,39 +230,33 @@ module ArgValidation = struct
     let checkInputChars args =
       let style =
         styles
-        |> List.filter (fun s -> s.name = args.style)
-        |> List.hd in
+        |> List.filter ~f:(fun s -> String.equal s.name args.style)
+        |> List.hd_exn in
 
       let ensure_visible_char ch =
-        if ch = space then "<SPACE>" else String.make 1 ch in
+        if Char.equal ch space then "<SPACE>" else String.make 1 ch in
 
       let invalidChars =
         args.text
-        |> String.to_seq
-        |> List.of_seq
-        |> List.filter (fun ch -> not <| List.mem ch style.supported_chars)
-        |> List.map ensure_visible_char in
+        |> String.to_list
+        |> List.filter ~f:(fun ch -> not (List.mem style.supported_chars ch ~equal:Char.equal))
+        |> List.map ~f:ensure_visible_char in
 
       let error style =
         let supported_chars style =
-          let chars = style.supported_chars |> List.map ensure_visible_char in
-          String.concat " " chars in
+          let chars = style.supported_chars |> List.map ~f:ensure_visible_char in
+          String.concat ~sep:" " chars in
 
         String.concat
-          "\n"
-          [Printf.sprintf "Invalid characters found for style \"%s\": %s" (style.name) (String.concat " " invalidChars);
+          ~sep:"\n"
+          [Printf.sprintf "Invalid characters found for style \"%s\": %s" (style.name) (String.concat ~sep:" " invalidChars);
            Printf.sprintf "Supported characters: %s" (supported_chars style)] in
 
       if List.length invalidChars = 0
       then Ok args
       else Error (error style) in
 
-    let ( let* ) = Result.bind in
-    let* args = checkArgCount rawArgs in
-    let* args' = checkStyleName args in
-    let* args'' = checkInputLength args' in
-    let* args''' = checkInputChars args'' in
-    Ok args'''
+    rawArgs |> checkArgCount >>= checkStyleName >>= checkInputLength >>= checkInputChars
 end
 
 open ArgValidation
@@ -273,17 +266,16 @@ let args = validate
 
 let get_style args =
   styles
-  |> List.filter (fun s -> s.name = args.style)
-  |> List.hd
+  |> List.filter ~f:(fun s -> String.equal s.name args.style)
+  |> List.hd_exn
 
 let convert_text args style =
   let text : string = args.text in
   let converter : char -> string = style.converter in
   text
-  |> String.to_seq
-  |> Seq.map converter
-  |> List.of_seq
-  |> fun lst -> String.concat "" lst
+  |> String.to_list
+  |> List.map ~f:converter
+  |> fun lst -> String.concat ~sep:"" lst
 
 let () =
   match args with
