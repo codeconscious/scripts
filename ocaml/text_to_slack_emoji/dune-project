@@ -19,7 +19,9 @@
  (name text_to_slack_emoji)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml)
+ (depends
+  (ocaml (>= 4.14))
+  base)
  (tags
   ("add topics" "to describe" your project)))
 
