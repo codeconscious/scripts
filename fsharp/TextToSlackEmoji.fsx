@@ -292,7 +292,6 @@ let convertText args style =
 
     text
     |> Seq.map converter
-    |> Seq.map string
     |> String.concat System.String.Empty
 
 match args with
