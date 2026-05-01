@@ -271,19 +271,15 @@ let get_style args =
   |> List.hd_exn
 
 let convert_text args style =
-  let text : string = args.text in
-  let converter : char -> string = style.converter in
+  let text = args.text in
+  let converter = style.converter in
+
   text
   |> String.to_list
   |> List.map ~f:converter
-  |> fun lst -> String.concat ~sep:empty lst
+  |> String.concat ~sep:empty
 
 let () =
   match args with
-  | Error e ->
-      Printf.eprintf "%s\n" e
-  | Ok a ->
-      a
-      |> get_style
-      |> (convert_text a)
-      |> fun s -> Printf.printf "%s\n" s
+  | Error e -> Printf.eprintf "%s\n" e
+  | Ok a -> a |> get_style |> convert_text a |> fun s -> Printf.printf "%s\n" s
