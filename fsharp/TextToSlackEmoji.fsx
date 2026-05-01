@@ -1,3 +1,5 @@
+#!/usr/bin/env dotnet fsi
+
 #r "nuget: CCFSharpUtils"
 #r "nuget: FSharpPlus"
 
