@@ -179,56 +179,55 @@ module Styles = struct
       };
     ]
 
-  let styleNames = styles |> List.map ~f:(fun s -> s.name)
+  let style_names = styles |> List.map ~f:(fun s -> s.name)
 end
 
 module ArgValidation = struct
   open Result.Let_syntax
-
   open Styles
 
   type user_args = { style: string; text: string }
 
   let validate =
-    let supportedStyleNames =
+    let supported_style_names =
       String.concat ~sep:" " (styles |> List.map ~f:(fun s -> s.name)) in
 
-    let rawArgs =
+    let raw_args =
       Sys.get_argv()
       |> Array.to_list
       |> List.tl_exn (* The head contains the script filename. *) in
 
-    let checkArgCount args =
-      let errorText =
+    let check_arg_count args =
+      let error_text =
         String.concat
           ~sep:"\n"
           ["Pass in (1) a style name and (2) a string containing only supported characters for that style.";
-            Printf.sprintf "Supported styles: %s" supportedStyleNames] in
+            Printf.sprintf "Supported styles: %s" supported_style_names] in
 
       match List.length args with
       | l when l = 2 ->
         Ok { style = args |> List.hd_exn |> String.lowercase;
              text = List.nth_exn args 1 |> String.lowercase }
       | _ ->
-        Error errorText in
+        Error error_text in
 
-    let checkStyleName args =
-      let errorText =
+    let check_style_name args =
+      let error_text =
         String.concat
           ~sep:"\n"
           [Printf.sprintf "Style \"%s\" not found." args.style;
-           Printf.sprintf "Supported styles: %s" supportedStyleNames] in
+           Printf.sprintf "Supported styles: %s" supported_style_names] in
 
-      match List.mem styleNames args.style ~equal:String.equal with
+      match List.mem style_names args.style ~equal:String.equal with
       | true -> Ok args
-      | false -> Error errorText in
+      | false -> Error error_text in
 
-    let checkInputLength args =
+    let check_input_length args =
       match String.length args.text with
       | 0 -> Error "You must enter text to be converted."
       | _ -> Ok args in
 
-    let checkInputChars args =
+    let check_input_chars args =
       let style =
         styles
         |> List.filter ~f:(fun s -> String.equal s.name args.style)
@@ -237,7 +236,7 @@ module ArgValidation = struct
       let ensure_visible_char ch =
         if Char.equal ch space then "<SPACE>" else String.make 1 ch in
 
-      let invalidChars =
+      let invalid_chars =
         args.text
         |> String.to_list
         |> List.filter ~f:(fun ch -> not (List.mem style.supported_chars ch ~equal:Char.equal))
@@ -250,20 +249,20 @@ module ArgValidation = struct
 
         String.concat
           ~sep:"\n"
-          [Printf.sprintf "Invalid characters found for style \"%s\": %s" (style.name) (String.concat ~sep:" " invalidChars);
+          [Printf.sprintf "Invalid characters found for style \"%s\": %s" (style.name) (String.concat ~sep:" " invalid_chars);
            Printf.sprintf "Supported characters: %s" (supported_chars style)] in
 
-      if List.length invalidChars = 0
+      if List.length invalid_chars = 0
       then Ok args
       else Error (error style) in
 
-    rawArgs |> checkArgCount >>= checkStyleName >>= checkInputLength >>= checkInputChars
+    raw_args |> check_arg_count >>= check_style_name >>= check_input_length >>= check_input_chars
 end
 
 open ArgValidation
 open Styles
 
-let args = validate
+let validated_args = validate
 
 let get_style args =
   styles
@@ -280,6 +279,6 @@ let convert_text args style =
   |> String.concat ~sep:empty
 
 let () =
-  match args with
+  match validated_args with
   | Error e -> Printf.eprintf "%s\n" e
-  | Ok a -> a |> get_style |> convert_text a |> fun s -> Printf.printf "%s\n" s
+  | Ok args -> args |> get_style |> convert_text args |> Printf.printf "%s\n"
