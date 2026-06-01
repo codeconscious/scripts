@@ -37,9 +37,9 @@ module Styles =
                 Converter =
                     fun ch ->
                         match ch with
-                        | Space -> ":blank: "
-                        | 'o' -> ":alpha-0: "
-                        | _ -> $":alpha-{ch}: " // Hairspace
+                        | Space -> ":blank: "  // Hairspace
+                        | 'o' -> ":alpha-0: "
+                        | _ -> $":alpha-{ch}: "
             };
             {   Name = "alphawhite"
                 SupportedChars = letters @ [Space; '!'; '?'; '#'; '@']
