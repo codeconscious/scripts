@@ -37,7 +37,7 @@ module Styles =
                 Converter =
                     fun ch ->
                         match ch with
-                        | Space -> ":blank: "  // Hairspace
+                        | Space -> ":blank: " // Hairspace
                         | 'o' -> ":alpha-0: "
                         | _ -> $":alpha-{ch}: "
             };
